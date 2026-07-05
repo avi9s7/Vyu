@@ -76,6 +76,8 @@ def test_audit_repository_append_only_and_scoped_list(postgres_urls: dict[str, s
 
     psycopg_url = postgres_urls["app"].replace("postgresql+psycopg://", "postgresql://")
     with psycopg.connect(psycopg_url) as connection, connection.cursor() as cursor:
+        cursor.execute("SELECT set_config('app.tenant_id', %s, true)", (str(tenant_id),))
+        cursor.execute("SELECT set_config('app.workspace_id', %s, true)", (str(workspace_id),))
         with pytest.raises(psycopg.errors.RaiseException):
             cursor.execute(
                 "UPDATE audit_events SET outcome = 'tampered' WHERE id = %s",

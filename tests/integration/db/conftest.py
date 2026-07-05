@@ -31,26 +31,27 @@ def _sqlalchemy_psycopg_url(container: PostgresContainer, user: str, password: s
 
 def _bootstrap_roles_psycopg_url(psycopg_url: str, dbname: str) -> None:
     with psycopg.connect(psycopg_url, autocommit=True) as connection:
-        connection.execute(
-            f"""
-            DO $$
-            BEGIN
-              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'vyu_migrator') THEN
-                CREATE ROLE vyu_migrator WITH LOGIN PASSWORD 'local-migrator-password';
-              END IF;
-              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'vyu_app') THEN
-                CREATE ROLE vyu_app WITH LOGIN PASSWORD 'local-vyu-password';
-              END IF;
-            END
-            $$;
-            REVOKE CREATE ON SCHEMA public FROM PUBLIC;
-            GRANT ALL PRIVILEGES ON DATABASE {dbname} TO vyu_migrator;
-            GRANT CREATE ON SCHEMA public TO vyu_migrator;
-            GRANT USAGE ON SCHEMA public TO vyu_app;
-            ALTER ROLE vyu_app NOBYPASSRLS NOSUPERUSER;
-            ALTER ROLE vyu_migrator NOBYPASSRLS;
-            """
-        )
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT 1 FROM pg_roles WHERE rolname = %s", ("vyu_migrator",)
+            )
+            if cursor.fetchone() is None:
+                cursor.execute(
+                    "CREATE ROLE vyu_migrator WITH LOGIN PASSWORD %s",
+                    ("local-migrator-password",),
+                )
+            cursor.execute("SELECT 1 FROM pg_roles WHERE rolname = %s", ("vyu_app",))
+            if cursor.fetchone() is None:
+                cursor.execute(
+                    "CREATE ROLE vyu_app WITH LOGIN PASSWORD %s",
+                    ("local-vyu-password",),
+                )
+            cursor.execute("REVOKE CREATE ON SCHEMA public FROM PUBLIC")
+            cursor.execute(f"GRANT ALL PRIVILEGES ON DATABASE {dbname} TO vyu_migrator")
+            cursor.execute("GRANT CREATE ON SCHEMA public TO vyu_migrator")
+            cursor.execute("GRANT USAGE ON SCHEMA public TO vyu_app")
+            cursor.execute("ALTER ROLE vyu_app NOBYPASSRLS NOSUPERUSER")
+            cursor.execute("ALTER ROLE vyu_migrator NOBYPASSRLS")
 
 
 def _bootstrap_roles(container: PostgresContainer) -> None:

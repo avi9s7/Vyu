@@ -301,12 +301,11 @@ uv run python scripts/export_openapi.py --output docs/api/openapi.json
 - Long-poll consumer with lease acquisition, handler dispatch, heartbeat, retry backoff, and message ack/nack semantics.
 - Duplicate terminal jobs ack without rerunning handlers; signal handlers for graceful stop.
 
-### 2026-07-05 — Task 9: Containers, compose, CI (commit pending)
+### 2026-07-05 — Task 9: Containers, compose, CI (commit `d965b794`, CI fix `pending`)
 
-**Key paths:** `deploy/docker/{api,worker}.Dockerfile`, `.dockerignore`, `compose.yaml`, `.github/workflows/ci.yml`
+**Branch pushed:** `cursor/fastapi-jobs-plan-3` @ `d965b794` (+ CI fix commit)
 
-- Non-root Python 3.13 slim images; compose adds API, worker, and LocalStack.
-- CI runs jobs/API PostgreSQL integration tests and builds API/worker images.
+**Open PR:** https://github.com/avi9s7/Vyu/compare/main...cursor/fastapi-jobs-plan-3
 
 ### Planned scope (from spec — not yet implemented)
 

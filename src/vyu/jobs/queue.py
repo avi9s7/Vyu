@@ -51,15 +51,25 @@ class QueueMessage:
         if extra:
             raise ValueError(f"Outbox payload contains disallowed fields: {sorted(extra)}")
         return cls(
-            schema_version=int(payload["schema_version"]),  # type: ignore[arg-type]
+            schema_version=_as_int(payload["schema_version"], "schema_version"),
             message_id=str(payload["message_id"]),
             job_id=str(payload["job_id"]),
             tenant_id=str(payload["tenant_id"]),
             workspace_id=str(payload["workspace_id"]),
             kind=str(payload["kind"]),
-            attempt=int(payload["attempt"]),  # type: ignore[arg-type]
+            attempt=_as_int(payload["attempt"], "attempt"),
             created_at=str(payload["created_at"]),
         )
+
+
+def _as_int(value: object, field: str) -> int:
+    if isinstance(value, bool):
+        raise ValueError(f"{field} must be an integer.")
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str) and value.isdigit():
+        return int(value)
+    raise ValueError(f"{field} must be an integer.")
 
 
 class SqsClient(Protocol):
@@ -170,7 +180,7 @@ def build_boto3_sqs_client(
     read_timeout_seconds: float,
     max_attempts: int,
     endpoint_url: str | None = None,
-):
+) -> Any:
     import boto3
     from botocore.config import Config
 

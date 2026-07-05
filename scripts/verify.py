@@ -24,7 +24,7 @@ def default_npm_executable() -> str:
 def commands_for_scope(scope: Scope, *, npm: str) -> list[Command]:
     backend = [
         Command("ruff", ("uv", "run", "ruff", "check", "src", "apps/serverless", "scripts", "tests")),
-        Command("mypy", ("uv", "run", "mypy")),
+        Command("mypy", ("uv", "run", "mypy", "--follow-imports=skip")),
         Command("python-tests", ("uv", "run", "python", "-m", "unittest", "discover")),
     ]
     integration = [

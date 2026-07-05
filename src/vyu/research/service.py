@@ -381,7 +381,10 @@ class ResearchService:
                 ) from exc
 
     def _get_search_row(self, session: Session, search_id: UUID) -> ResearchRun | None:
-        return session.scalar(select(ResearchRun).where(ResearchRun.id == search_id))
+        row = session.scalar(select(ResearchRun).where(ResearchRun.id == search_id))
+        if isinstance(row, ResearchRun):
+            return row
+        return None
 
     def _job_id_for_search(self, session: Session, search_id: UUID) -> UUID | None:
         job = session.scalar(

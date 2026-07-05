@@ -4,7 +4,7 @@ import pytest
 
 pytest_plugins = ["tests.integration.conftest"]
 
-from tests.api.support import AuthTestContext, build_auth_test_client
+from tests.api.support import AuthTestContext, build_auth_test_client  # noqa: E402
 
 
 @pytest.fixture

@@ -59,7 +59,7 @@ class JobWorker:
     settings: WorkerSettings
     handlers: Mapping[str, JobHandler] = field(default_factory=dict)
     clock: Callable[[], datetime] = lambda: datetime.now(tz=UTC)
-    jitter: Callable[[float], float] = random.uniform
+    jitter: Callable[[float, float], float] = random.uniform
 
     def process_queue_message(
         self,

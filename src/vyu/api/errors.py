@@ -43,4 +43,4 @@ def build_error_response(
             fields=fields or [],
         ),
     )
-    return envelope.model_dump()
+    return dict(envelope.model_dump())

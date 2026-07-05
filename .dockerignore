@@ -1,0 +1,39 @@
+# Python build and runtime artifacts
+.venv/
+__pycache__/
+*.py[cod]
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Local secrets and environment
+.env
+.env.*
+!.env.example
+
+# Git and editor metadata
+.git/
+.gitattributes
+.github/
+.cursor/
+
+# Tests, docs, and non-runtime assets
+tests/
+docs/
+*.md
+!README.md
+
+# Frontend and upstreams
+apps/web/
+upstreams/
+Additional_scripts_patch/
+
+# Outputs and caches
+outputs/
+data/
+*.log
+
+# Development compose volumes
+deploy/local/

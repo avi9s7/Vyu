@@ -52,6 +52,7 @@ def _bootstrap_roles_psycopg_url(psycopg_url: str, dbname: str) -> None:
             cursor.execute("GRANT USAGE ON SCHEMA public TO vyu_app")
             cursor.execute("ALTER ROLE vyu_app NOBYPASSRLS NOSUPERUSER")
             cursor.execute("ALTER ROLE vyu_migrator NOBYPASSRLS")
+            cursor.execute("CREATE EXTENSION IF NOT EXISTS vector")
 
 
 def _bootstrap_roles(container: PostgresContainer) -> None:

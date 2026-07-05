@@ -37,14 +37,12 @@ def _bootstrap_roles_psycopg_url(psycopg_url: str, dbname: str) -> None:
             )
             if cursor.fetchone() is None:
                 cursor.execute(
-                    "CREATE ROLE vyu_migrator WITH LOGIN PASSWORD %s",
-                    ("local-migrator-password",),
+                    "CREATE ROLE vyu_migrator WITH LOGIN PASSWORD 'local-migrator-password'"
                 )
             cursor.execute("SELECT 1 FROM pg_roles WHERE rolname = %s", ("vyu_app",))
             if cursor.fetchone() is None:
                 cursor.execute(
-                    "CREATE ROLE vyu_app WITH LOGIN PASSWORD %s",
-                    ("local-vyu-password",),
+                    "CREATE ROLE vyu_app WITH LOGIN PASSWORD 'local-vyu-password'"
                 )
             cursor.execute("REVOKE CREATE ON SCHEMA public FROM PUBLIC")
             cursor.execute(f"GRANT ALL PRIVILEGES ON DATABASE {dbname} TO vyu_migrator")

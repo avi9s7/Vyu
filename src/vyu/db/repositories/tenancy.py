@@ -100,8 +100,9 @@ class TenancyRepository:
     def add_tenant(self, record: NewTenant) -> TenantRecord:
         row = Tenant(id=record.id, slug=record.slug, name=record.name, status=record.status)
         try:
-            self._session.add(row)
-            self._session.flush()
+            with self._session.begin_nested():
+                self._session.add(row)
+                self._session.flush()
         except IntegrityError as exc:
             raise DuplicateRecordError("tenant already exists") from exc
         return TenantRecord(id=row.id, slug=row.slug, name=row.name, status=row.status)
@@ -115,8 +116,9 @@ class TenancyRepository:
             status=record.status,
         )
         try:
-            self._session.add(row)
-            self._session.flush()
+            with self._session.begin_nested():
+                self._session.add(row)
+                self._session.flush()
         except IntegrityError as exc:
             raise DuplicateRecordError("workspace already exists") from exc
         return WorkspaceRecord(
@@ -155,8 +157,9 @@ class TenancyRepository:
             active=record.active,
         )
         try:
-            self._session.add(row)
-            self._session.flush()
+            with self._session.begin_nested():
+                self._session.add(row)
+                self._session.flush()
         except IntegrityError as exc:
             raise DuplicateRecordError("user already exists") from exc
         return UserRecord(
@@ -178,8 +181,9 @@ class TenancyRepository:
             status=record.status,
         )
         try:
-            self._session.add(row)
-            self._session.flush()
+            with self._session.begin_nested():
+                self._session.add(row)
+                self._session.flush()
         except IntegrityError as exc:
             raise DuplicateRecordError("membership already exists") from exc
         return MembershipRecord(

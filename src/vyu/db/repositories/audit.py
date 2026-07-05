@@ -76,8 +76,9 @@ class AuditRepository:
             details=event.details or {},
         )
         try:
-            self._session.add(row)
-            self._session.flush()
+            with self._session.begin_nested():
+                self._session.add(row)
+                self._session.flush()
         except IntegrityError as exc:
             raise DuplicateAuditEventError("audit event already exists") from exc
         return AuditEventRecord(

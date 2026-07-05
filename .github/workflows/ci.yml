@@ -47,7 +47,12 @@ jobs:
           VYU_ADMIN_DATABASE_URL: postgresql+psycopg://test:test@127.0.0.1:5432/vyu
           VYU_MIGRATION_DATABASE_URL: postgresql+psycopg://vyu_migrator:local-migrator-password@127.0.0.1:5432/vyu
           VYU_DATABASE_URL: postgresql+psycopg://vyu_app:local-vyu-password@127.0.0.1:5432/vyu
-        run: uv run pytest tests/integration/db -q --tb=short
+        run: |
+          uv run pytest tests/integration/db/test_audit_repository.py -vv --tb=short
+          uv run pytest tests/integration/db/test_import_tenant_registry.py -vv --tb=short
+          uv run pytest tests/integration/db/test_migrations.py -vv --tb=short
+          uv run pytest tests/integration/db/test_tenancy_repository.py -vv --tb=short
+          uv run pytest tests/integration/db/test_tenant_rls.py -vv --tb=short
 
   frontend:
     runs-on: ubuntu-24.04

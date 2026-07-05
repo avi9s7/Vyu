@@ -232,7 +232,36 @@ uv run mypy
 - `create_app()` verifies Alembic revision at startup; tests override with in-memory SQLite engine + `schema_revision_override="0003"`.
 - Stable error envelope on all `/v1` routes; request/trace IDs via middleware.
 
-**Remaining (Tasks 5–9):** OIDC/membership auth, research API + OpenAPI, SQS outbox publisher, worker runtime, Docker/compose/CI.
+**Remaining (Tasks 5–9):** research API + OpenAPI, SQS outbox publisher, worker runtime, Docker/compose/CI.
+
+### 2026-07-05 — Task 5: OIDC identity and PostgreSQL membership
+
+**Goal:** Bind verified bearer tokens to database membership; expose FastAPI dependencies and protected debug routes for contract tests.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| Auth layer | `src/vyu/auth/{tokens,settings,principal,resolver}.py` |
+| API wiring | `src/vyu/api/{dependencies,exceptions}.py`, `routers/auth_debug.py`, `app.py` |
+| IdP | `src/vyu/deployment/idp.py` — `require_email_verified` on `OidcJwksConfig` |
+| Tests | `tests/api/{support,conftest,test_authentication,test_tenant_authorization}.py` |
+
+**Behavior:**
+
+- `TokenVerifier` protocol wraps existing HS256 and OIDC JWKS authenticators; claim validation stays framework-free.
+- `PrincipalResolver` upserts external identity, loads active exact-scope membership, uses stored role (ignores claimed admin), sets `app.tenant_id` / `app.workspace_id` before audit append, and records allow/deny identity audit events.
+- Protected routes use `get_request_principal`; `/v1/health/live` stays public.
+- `VYU_AUTH_MODE=local_hs256` allowed only in local/test; rejected in staging/production.
+
+**Verification:**
+
+```powershell
+uv run pytest tests/api/test_authentication.py tests/api/test_tenant_authorization.py tests/api/test_health.py -q
+uv run mypy src/vyu/api src/vyu/auth
+```
+
+*(PostgreSQL required for auth integration tests — Docker testcontainers locally or CI env vars.)*
 
 ### Planned scope (from spec — not yet implemented)
 

@@ -202,6 +202,7 @@ def test_acquire_job_is_exclusive(job_scope: tuple[dict[str, str], TenantScope])
     job_id = _create_job(factory, scope)
 
     def attempt(worker_id: str) -> str | None:
+        repo = JobRepository()
         with transaction(factory, scope=scope) as session:
             lease = repo.acquire_job(job_id, worker_id, 30, session)
             return worker_id if lease is not None else None

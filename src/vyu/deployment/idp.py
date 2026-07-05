@@ -41,6 +41,7 @@ class OidcJwksConfig:
     fetch_timeout_seconds: float = 2.0
     unauthenticated_paths: frozenset[str] = frozenset({"/v1/health"})
     required_token_use: str | None = None
+    require_email_verified: bool = False
 
     def validate(self) -> None:
         if not self.issuer.strip():
@@ -246,6 +247,9 @@ class OidcJwksBearerTokenAuthenticator:
             token_use = payload.get("token_use")
             if token_use != self.config.required_token_use:
                 raise AuthenticationError("Bearer token token_use is not accepted.")
+
+        if self.config.require_email_verified and payload.get("email_verified") is not True:
+            raise AuthenticationError("Email verification is required.")
 
 
 def _provider_from_config(

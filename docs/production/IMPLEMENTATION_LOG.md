@@ -196,10 +196,43 @@ Included: schema/RLS/repositories, CI postgres service, integration test fixes (
 
 ## Plan 3 — FastAPI application and job platform
 
-**Status:** not started  
-**Owner:** unassigned  
+**Status:** in_progress  
+**Owner:** avi9s7  
+**Branch:** `cursor/fastapi-jobs-plan-3`  
 **Entry gate:** Plan 2 complete (`ff3b90e6` / Alembic `0002`)  
-**Plan spec:** `docs/superpowers/plans/2026-07-05-vyu-plan-03-fastapi-jobs.md`
+**Plan spec:** `docs/superpowers/plans/2026-07-05-vyu-plan-03-fastapi-jobs.md`  
+**Current Alembic head:** `0003`
+
+### 2026-07-05 — Tasks 1–4 (commits `4dc25668` … `57f5563e`)
+
+**Goal:** Dependencies, job/research schema, idempotent job repository, and FastAPI shell with stable error contract.
+
+| Task | Commit message | Key paths |
+| --- | --- | --- |
+| 1 | `build: add API and queue dependencies` | `pyproject.toml`, `uv.lock`, FastAPI/boto3/PyJWT/uvicorn/httpx |
+| 2 | `feat: add durable job and research schema` | `0003_jobs_research.py`, `src/vyu/jobs/models.py`, integration migration tests |
+| 3 | `feat: add idempotent job state machine` | `src/vyu/jobs/contracts.py`, `repository.py`, lease/idempotency integration tests |
+| 4 | `feat: add FastAPI app and stable error contract` | `src/vyu/api/*`, `apps/api/main.py`, `tests/api/*` |
+
+**Schema `0003` tables:** `jobs`, `idempotency_keys`, `outbox_events`, `research_runs`, `research_run_events` — all with FORCE RLS (tenant-only for idempotency keys; tenant+workspace for the rest).
+
+**Verification (local):**
+
+```powershell
+uv run python -m unittest discover -q
+uv run pytest tests/api -q
+uv run ruff check src/vyu/api src/vyu/jobs
+uv run mypy
+```
+
+**Decisions:**
+
+- Shared PostgreSQL fixture moved to `tests/integration/conftest.py` for db + jobs integration tests.
+- Job repository uses nested savepoints pattern inherited from Plan 2 for idempotency key conflicts.
+- `create_app()` verifies Alembic revision at startup; tests override with in-memory SQLite engine + `schema_revision_override="0003"`.
+- Stable error envelope on all `/v1` routes; request/trace IDs via middleware.
+
+**Remaining (Tasks 5–9):** OIDC/membership auth, research API + OpenAPI, SQS outbox publisher, worker runtime, Docker/compose/CI.
 
 ### Planned scope (from spec — not yet implemented)
 

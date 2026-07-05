@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Literal, Sequence
 
 
-Scope = Literal["backend", "frontend", "all"]
+Scope = Literal["backend", "frontend", "integration", "all"]
 
 
 @dataclass(frozen=True)
@@ -27,6 +27,12 @@ def commands_for_scope(scope: Scope, *, npm: str) -> list[Command]:
         Command("mypy", ("uv", "run", "mypy")),
         Command("python-tests", ("uv", "run", "python", "-m", "unittest", "discover")),
     ]
+    integration = [
+        Command(
+            "postgres-integration",
+            ("uv", "run", "pytest", "tests/integration/db", "-q"),
+        ),
+    ]
     frontend = [
         Command("npm-ci", (npm, "ci", "--prefix", "apps/web")),
         Command("frontend-typecheck", (npm, "run", "typecheck", "--prefix", "apps/web")),
@@ -36,9 +42,11 @@ def commands_for_scope(scope: Scope, *, npm: str) -> list[Command]:
     ]
     if scope == "backend":
         return backend
+    if scope == "integration":
+        return integration
     if scope == "frontend":
         return frontend
-    return [*backend, *frontend]
+    return [*backend, *integration, *frontend]
 
 
 def run_commands(commands: Sequence[Command]) -> int:
@@ -56,7 +64,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Verify the VYU repository.")
     parser.add_argument(
         "--scope",
-        choices=("backend", "frontend", "all"),
+        choices=("backend", "frontend", "integration", "all"),
         default="all",
     )
     args = parser.parse_args(argv)

@@ -1,6 +1,6 @@
 # VYU Production Implementation Status
 
-Last verified Git SHA: baseline pending  
+Last verified Git SHA: 1b595b07fd7d45ad89b029f4e81ed1af4d3983cb  
 Last verified date: 2026-07-05  
 Overall state: development POC  
 
@@ -10,8 +10,8 @@ Local JSON and SQLite artifacts are not production evidence. A plan reaches `com
 
 | # | Workstream | Status | Owner | Issue/PR | Entry evidence | Exit evidence | Blockers |
 | ---: | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Repository baseline and engineering system | in_progress | agent | none | Architecture approved | Local `scripts/verify.py --scope backend` passed; CI pending first push | CI run URL required before marking complete |
-| 2 | PostgreSQL persistence and tenancy | not_started | unassigned | none | none | none | Plan 1 incomplete |
+| 1 | Repository baseline and engineering system | complete | avi9s7 | https://github.com/avi9s7/Vyu/pull/1 | Architecture approved | Merge SHA `1b595b07`; CI backend+frontend success on PR #1 | none |
+| 2 | PostgreSQL persistence and tenancy | in_progress | agent | none | Plan 1 complete | none | Implementation in progress |
 | 3 | FastAPI application and job platform | not_started | unassigned | none | none | none | Plan 2 incomplete |
 | 4 | AWS infrastructure and deployment | not_started | unassigned | none | none | none | Plans 1-3 incomplete |
 | 5 | Evidence ingestion | not_started | unassigned | none | none | none | Plans 2-4 incomplete |

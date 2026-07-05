@@ -14,7 +14,7 @@ Detailed build history, decisions, and CI fixes: [`IMPLEMENTATION_LOG.md`](IMPLE
 | ---: | --- | --- | --- | --- | --- | --- | --- |
 | 1 | Repository baseline and engineering system | complete | avi9s7 | https://github.com/avi9s7/Vyu/pull/1 | Architecture approved | Merge SHA `1b595b07`; CI backend+frontend success on PR #1 | none |
 | 2 | PostgreSQL persistence and tenancy | complete | avi9s7 | https://github.com/avi9s7/Vyu/pull/2 | Plan 1 complete | Merge SHA `ff3b90e6`; Alembic revision `0002`; CI backend+frontend success on run https://github.com/avi9s7/Vyu/actions/runs/28745481470; PostgreSQL RLS integration tests in `tests/integration/db/test_tenant_rls.py` | none |
-| 3 | FastAPI application and job platform | in_progress | avi9s7 | none | Plan 2 complete | Alembic `0003`; OpenAPI at `docs/api/openapi.json`; auth/research/jobs integration tests; API/worker Dockerfiles and compose stack on branch `cursor/fastapi-jobs-plan-3` | CI green evidence on branch |
+| 3 | FastAPI application and job platform | in_progress | avi9s7 | https://github.com/avi9s7/Vyu/compare/main...cursor/fastapi-jobs-plan-3 | Plan 2 complete | Branch `cursor/fastapi-jobs-plan-3` @ `1861eee2`; Alembic `0003`; OpenAPI; auth/research/jobs tests; Docker/compose; CI trigger on `cursor/**` | PR + green CI run URL |
 | 4 | AWS infrastructure and deployment | not_started | unassigned | none | none | none | Plans 1-3 incomplete |
 | 5 | Evidence ingestion | not_started | unassigned | none | none | none | Plans 2-4 incomplete |
 | 6 | Governed connectors and retrieval | not_started | unassigned | none | none | none | Plans 2-4 incomplete |

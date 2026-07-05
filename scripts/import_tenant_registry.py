@@ -8,6 +8,9 @@ from pathlib import Path
 from typing import Any
 from uuid import UUID
 
+from sqlalchemy import select
+
+from src.vyu.db.models.tenancy import User
 from src.vyu.db.repositories.audit import AuditRepository, NewAuditEvent
 from src.vyu.db.repositories.tenancy import (
     DuplicateRecordError,
@@ -130,6 +133,7 @@ def import_registry(*, registry: dict[str, Any], apply: bool) -> ImportCounts:
     with factory.begin() as session:
         tenancy = TenancyRepository(session)
         for user_slug, user_uuid in user_ids.items():
+            existing = session.scalar(select(User).where(User.id == user_uuid))
             try:
                 tenancy.upsert_user(
                     IdentityUser(
@@ -139,7 +143,8 @@ def import_registry(*, registry: dict[str, Any], apply: bool) -> ImportCounts:
                         email=f"{user_slug}@import.local",
                     )
                 )
-                counts = ImportCounts(**{**counts.__dict__, "users": counts.users + 1})
+                if existing is None:
+                    counts = ImportCounts(**{**counts.__dict__, "users": counts.users + 1})
             except DuplicateRecordError as exc:
                 raise ValueError(f"user identity conflict: {user_slug}") from exc
 

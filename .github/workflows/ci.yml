@@ -40,14 +40,14 @@ jobs:
           enable-cache: true
       - name: Install locked dependencies
         run: uv sync --all-groups --frozen
-      - name: Run backend verification
+      - name: Backend unit verification
+        run: uv run python scripts/verify.py --scope backend
+      - name: PostgreSQL integration tests
         env:
           VYU_ADMIN_DATABASE_URL: postgresql+psycopg://test:test@127.0.0.1:5432/vyu
           VYU_MIGRATION_DATABASE_URL: postgresql+psycopg://vyu_migrator:local-migrator-password@127.0.0.1:5432/vyu
           VYU_DATABASE_URL: postgresql+psycopg://vyu_app:local-vyu-password@127.0.0.1:5432/vyu
-        run: |
-          uv run python scripts/verify.py --scope backend
-          uv run python scripts/verify.py --scope integration
+        run: uv run pytest tests/integration/db -q --tb=short
 
   frontend:
     runs-on: ubuntu-24.04

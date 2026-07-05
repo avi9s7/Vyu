@@ -48,6 +48,7 @@ def _bootstrap_roles_psycopg_url(psycopg_url: str, dbname: str) -> None:
                 )
             cursor.execute("REVOKE CREATE ON SCHEMA public FROM PUBLIC")
             cursor.execute(f"GRANT ALL PRIVILEGES ON DATABASE {dbname} TO vyu_migrator")
+            cursor.execute(f"ALTER DATABASE {dbname} OWNER TO vyu_migrator")
             cursor.execute("GRANT CREATE ON SCHEMA public TO vyu_migrator")
             cursor.execute("GRANT USAGE ON SCHEMA public TO vyu_app")
             cursor.execute("ALTER ROLE vyu_app NOBYPASSRLS NOSUPERUSER")

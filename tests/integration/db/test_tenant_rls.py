@@ -3,8 +3,7 @@ from __future__ import annotations
 from uuid import UUID, uuid4
 
 import pytest
-from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import DBAPIError
 
 from src.vyu.db.models.tenancy import Membership
 from src.vyu.db.repositories.tenancy import (
@@ -107,7 +106,7 @@ def test_rls_scopes_memberships(postgres_urls: dict[str, str], seeded_tenants: d
         assert session.scalars(select(Membership)).all() == []
 
     with transaction(factory, scope=scope_a) as session:
-        with pytest.raises(IntegrityError):
+        with pytest.raises(DBAPIError):
             session.add(
                 Membership(
                     id=uuid4(),

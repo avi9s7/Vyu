@@ -1,0 +1,15 @@
+{"document_ids": ["DOC-001"], "question_id": "Q-001"}
+{"document_ids": ["DOC-001", "DOC-002", "DOC-006", "DOC-025"], "question_id": "Q-002"}
+{"document_ids": ["DOC-009", "DOC-012", "DOC-017"], "question_id": "Q-003"}
+{"document_ids": ["DOC-005", "DOC-018"], "question_id": "Q-004"}
+{"document_ids": ["DOC-001", "DOC-002", "DOC-023", "DOC-025"], "question_id": "Q-005"}
+{"document_ids": ["DOC-019"], "question_id": "Q-006"}
+{"document_ids": ["DOC-003"], "question_id": "Q-007"}
+{"document_ids": ["DOC-001", "DOC-006", "DOC-026"], "question_id": "Q-008"}
+{"document_ids": ["DOC-001"], "question_id": "Q-009"}
+{"document_ids": ["DOC-022", "DOC-023"], "question_id": "Q-010"}
+{"document_ids": ["DOC-029"], "question_id": "Q-011"}
+{"document_ids": ["DOC-022", "DOC-023", "DOC-024"], "question_id": "Q-012"}
+{"document_ids": ["DOC-001"], "question_id": "Q-013"}
+{"document_ids": ["DOC-004"], "question_id": "Q-014"}
+{"document_ids": ["DOC-019", "DOC-029"], "question_id": "Q-015"}

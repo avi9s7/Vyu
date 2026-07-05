@@ -1,0 +1,150 @@
+{
+  "generated_at": "2026-06-13T14:53:45.664422+00:00",
+  "phase": "0",
+  "policy": "No upstream source files are copied into Vyu during Phase 0.",
+  "upstreams": [
+    {
+      "commit": "3c422841d0ab623c67402323c768f07cb37abb62",
+      "copied_or_adapted_files": [],
+      "declared_license": "Apache-2.0",
+      "dependency_files": [
+        "applications/foldrun/foldrun-agent/pyproject.toml",
+        "applications/foldrun/src/alphafold-components/requirements.txt",
+        "applications/foldrun/src/boltz2-components/requirements.txt",
+        "applications/foldrun/src/foldrun-a2a/pyproject.toml",
+        "applications/foldrun/src/foldrun-analysis-job/pyproject.toml",
+        "applications/foldrun/src/foldrun-viewer/pyproject.toml",
+        "applications/pharma-on-gemini-enterprise/biocompass-on-gemini-enterprise/biocompass_agent/requirements.txt",
+        "applications/pharma-on-gemini-enterprise/model-garden-on-gemini-enterprise/pyproject.toml",
+        "applications/pharma-on-gemini-enterprise/paperbanana-on-gemini-enterprise/paperbanana_agent/requirements.txt",
+        "applications/sentinel/frontend/package-lock.json",
+        "applications/sentinel/frontend/package.json",
+        "applications/sentinel/pyproject.toml"
+      ],
+      "license_file": "LICENSE",
+      "license_sha256": "3ddf9be5c28fe27dad143a5dc76eea25222ad1dd68934a047064e56ed2fa40c5",
+      "local_modifications": [],
+      "local_path": "upstreams/LifeSciences",
+      "name": "google_biocompass",
+      "repo": "GoogleCloudPlatform/LifeSciences",
+      "repo_url": "https://github.com/GoogleCloudPlatform/LifeSciences.git",
+      "required_attribution": "retain Apache-2.0 notices for any copied or adapted files",
+      "reuse_policy": "adapt_with_notice",
+      "status": "cloned",
+      "upstream_path": "applications/pharma-on-gemini-enterprise/biocompass-on-gemini-enterprise",
+      "usage": "selected_components"
+    },
+    {
+      "commit": "30ac08d388d456c26af1e966506ed96f23f20e22",
+      "copied_or_adapted_files": [],
+      "declared_license": "Apache-2.0",
+      "dependency_files": [
+        "clinical_trials_mcp/requirements.txt",
+        "cms_coverage_mcp/requirements.txt",
+        "drug_data_mcp/requirements.txt",
+        "fda_safety_mcp/requirements.txt",
+        "icd10_mcp/requirements.txt",
+        "medlineplus_mcp/requirements.txt",
+        "npi_mcp/requirements.txt",
+        "pubmed_mcp/requirements.txt",
+        "rxnorm_mcp/requirements.txt",
+        "scripts/requirements.txt",
+        "tests/requirements.txt",
+        "umls_mcp/requirements.txt"
+      ],
+      "license_file": "LICENSE",
+      "license_sha256": "3ddf9be5c28fe27dad143a5dc76eea25222ad1dd68934a047064e56ed2fa40c5",
+      "local_modifications": [],
+      "local_path": "upstreams/hcls-mcp-servers",
+      "name": "google_pubmed_mcp",
+      "repo": "GoogleCloudPlatform/hcls-mcp-servers",
+      "repo_url": "https://github.com/GoogleCloudPlatform/hcls-mcp-servers.git",
+      "required_attribution": "retain Apache-2.0 notices for any copied or adapted files",
+      "reuse_policy": "adapt_with_notice",
+      "status": "cloned",
+      "upstream_path": "pubmed_mcp",
+      "usage": "connector_reference"
+    },
+    {
+      "commit": "7599a728a28789fd601728c08d313b1148051f41",
+      "copied_or_adapted_files": [],
+      "declared_license": "US-Government-Public-Domain",
+      "dependency_files": [
+        "requirements.txt"
+      ],
+      "license_file": "LICENSE",
+      "license_sha256": "2de179475b4ff66b8f7fb1f1d05650c58ecd83fd22575e4c98a4b6f757d4b196",
+      "local_modifications": [],
+      "local_path": "upstreams/MedRAG",
+      "name": "medrag",
+      "repo": "gzxiong/MedRAG",
+      "repo_url": "https://github.com/gzxiong/MedRAG.git",
+      "required_attribution": "record model corpus and dependency licences separately",
+      "reuse_policy": "adapt_with_model_and_corpus_review",
+      "status": "cloned",
+      "upstream_path": ".",
+      "usage": "retriever_adapter"
+    },
+    {
+      "commit": "35b5e92cd6228a0fc6a1f1114521b98cde019bd6",
+      "copied_or_adapted_files": [],
+      "declared_license": "unverified",
+      "dependency_files": [
+        "PubMedRAG_Files/requirements.txt"
+      ],
+      "license_file": null,
+      "license_sha256": null,
+      "local_modifications": [],
+      "local_path": "upstreams/PubMedRAG-SimCSE",
+      "name": "pubmedrag_simcse",
+      "repo": "HamsiniGupta/PubMedRAG",
+      "repo_url": "https://github.com/HamsiniGupta/PubMedRAG.git",
+      "required_attribution": "licence must be clarified before source reuse",
+      "reuse_policy": "do_not_copy_until_license_confirmed",
+      "status": "cloned",
+      "upstream_path": ".",
+      "usage": "reference_only"
+    },
+    {
+      "commit": "2abbdd48380b3a27eb143be67f29410a8ed5d5e6",
+      "copied_or_adapted_files": [],
+      "declared_license": "unverified",
+      "dependency_files": [
+        "requirements.txt"
+      ],
+      "license_file": null,
+      "license_sha256": null,
+      "local_modifications": [],
+      "local_path": "upstreams/RAG-Gym",
+      "name": "rag_gym",
+      "repo": "RAG-Gym/RAG-Gym",
+      "repo_url": "https://github.com/RAG-Gym/RAG-Gym.git",
+      "required_attribution": "licence must be clarified before source reuse",
+      "reuse_policy": "do_not_copy_until_license_confirmed",
+      "status": "cloned",
+      "upstream_path": ".",
+      "usage": "reference_only"
+    },
+    {
+      "commit": "86a71a95e0e1bd3f8030f2aefba778349c88eb8e",
+      "copied_or_adapted_files": [],
+      "declared_license": "GPL-3.0",
+      "dependency_files": [
+        "requirements.txt",
+        "setup.py"
+      ],
+      "license_file": "LICENSE",
+      "license_sha256": "230184f60bae2feaf244f10a8bac053c8ff33a183bcc365b4d8b876d2b7f4809",
+      "local_modifications": [],
+      "local_path": "upstreams/PubMedRAG",
+      "name": "zaoqu_pubmedrag",
+      "repo": "Zaoqu-Liu/PubMedRAG",
+      "repo_url": "https://github.com/Zaoqu-Liu/PubMedRAG.git",
+      "required_attribution": "GPL review required before any source reuse",
+      "reuse_policy": "do_not_copy_without_legal_approval",
+      "status": "cloned",
+      "upstream_path": ".",
+      "usage": "reference_only"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{"category": "simple_fact", "expected_action": "answer_with_citation", "question": "How many migraine days did VX-101 reduce in VISTA-1?", "question_id": "Q-001"}
+{"category": "comparative_efficacy", "expected_action": "synthesize", "question": "Does VX-101 reduce migraine days compared with standard therapy?", "question_id": "Q-002"}
+{"category": "safety", "expected_action": "synthesize", "question": "What safety concerns are reported for VX-101?", "question_id": "Q-003"}
+{"category": "population_applicability", "expected_action": "qualify_answer", "question": "Is VX-101 evidence applicable to adults over 65?", "question_id": "Q-004"}
+{"category": "conflicting_evidence", "expected_action": "disclose_conflict", "question": "Which studies conflict on VX-101 efficacy?", "question_id": "Q-005"}
+{"category": "insufficient_evidence", "expected_action": "abstain", "question": "Does VX-101 prevent chronic migraine progression?", "question_id": "Q-006"}
+{"category": "exact_acronym", "expected_action": "answer_with_citation", "question": "Find evidence that uses the acronym VXMDS.", "question_id": "Q-007"}
+{"category": "semantic_matching", "expected_action": "synthesize", "question": "Find studies about headache-day reduction with the VX intervention.", "question_id": "Q-008"}
+{"category": "followup_reuse_memory", "expected_action": "reuse_existing_evidence", "question": "Based on that evidence, what did the main trial report?", "question_id": "Q-009"}
+{"category": "followup_new_search", "expected_action": "search_new_evidence", "question": "Now check whether any new preprints disagree.", "question_id": "Q-010"}
+{"category": "retraction_handling", "expected_action": "exclude_or_warn", "question": "What if the strongest-looking VX-101 paper is retracted?", "question_id": "Q-011"}
+{"category": "preprint_distinction", "expected_action": "qualify_answer", "question": "Which VX-101 evidence is not peer reviewed?", "question_id": "Q-012"}
+{"category": "pdf_table", "expected_action": "answer_with_citation", "question": "Which PDF table reports the VX-101 result summary?", "question_id": "Q-013"}
+{"category": "funding_conflict", "expected_action": "qualify_answer", "question": "Which VX-101 studies disclose manufacturer funding?", "question_id": "Q-014"}
+{"category": "human_review", "expected_action": "recommend_human_review", "question": "Should a clinician rely on VX-101 without review?", "question_id": "Q-015"}

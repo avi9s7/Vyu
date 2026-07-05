@@ -1,0 +1,87 @@
+{
+  "schema_version": 2,
+  "tenants": [
+    {
+      "tenant_id": "local_tenant",
+      "display_name": "Local Tenant",
+      "status": "active",
+      "allowed_email_domains": ["example.invalid"],
+      "created_at": "2026-06-28T00:00:00Z",
+      "metadata": {
+        "environment": "local"
+      }
+    }
+  ],
+  "workspaces": [
+    {
+      "tenant_id": "local_tenant",
+      "workspace_id": "local_workspace",
+      "display_name": "Local Workspace",
+      "status": "active",
+      "data_classification": "public_literature",
+      "created_at": "2026-06-28T00:00:00Z",
+      "metadata": {}
+    }
+  ],
+  "membership_grants": [
+    {
+      "grant_id": "local-reviewer-grant",
+      "user_id": "reviewer-1",
+      "tenant_id": "local_tenant",
+      "workspace_id": "local_workspace",
+      "roles": ["reviewer"],
+      "status": "active",
+      "access_mode": "standard",
+      "granted_by": "local-admin",
+      "granted_at": "2026-06-28T00:00:00Z",
+      "expires_at": null,
+      "reason": "local smoke-test operator grant",
+      "metadata": {}
+    },
+    {
+      "grant_id": "local-api-service-grant",
+      "user_id": "svc:local-api",
+      "tenant_id": "local_tenant",
+      "workspace_id": "local_workspace",
+      "roles": ["reviewer"],
+      "status": "active",
+      "access_mode": "standard",
+      "granted_by": "local-admin",
+      "granted_at": "2026-06-28T00:00:00Z",
+      "expires_at": null,
+      "reason": "local API-key service-account grant",
+      "metadata": {}
+    }
+  ],
+  "service_accounts": [
+    {
+      "service_account_id": "svc:local-api",
+      "tenant_id": "local_tenant",
+      "display_name": "Local API Service Account",
+      "status": "active",
+      "allowed_scopes": ["review_queue:read", "report_export:create"],
+      "created_at": "2026-06-28T00:00:00Z",
+      "created_by": "local-admin",
+      "metadata": {}
+    }
+  ],
+  "api_keys": [
+    {
+      "key_id": "local-api-key",
+      "service_account_id": "svc:local-api",
+      "tenant_id": "local_tenant",
+      "workspace_id": "local_workspace",
+      "roles": ["reviewer"],
+      "secret_hash": "sha256:1360be6a78b87017bf49d07398518d585a8ce5e650e7c2d0d8c8363753a5de97",
+      "status": "active",
+      "allowed_scopes": ["review_queue:read"],
+      "created_at": "2026-06-28T00:00:00Z",
+      "created_by": "local-admin",
+      "expires_at": null,
+      "last_rotated_at": "2026-06-28T00:00:00Z",
+      "metadata": {
+        "example_secret": "local-api-key-secret"
+      }
+    }
+  ]
+}

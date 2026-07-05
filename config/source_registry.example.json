@@ -1,0 +1,76 @@
+{
+  "sources": [
+    {
+      "access_policy": "local_artifact_generation",
+      "allowed_uses": [
+        "artifact_generation"
+      ],
+      "approval_status": "approved",
+      "approved_at": "2026-06-13T00:00:00Z",
+      "approved_by": "production-review-board",
+      "attribution_required": false,
+      "connector_config_ref": "local.dummy_corpus",
+      "display_name": "Synthetic Dummy Corpus",
+      "forbidden_uses": [
+        "clinical_decision_support",
+        "patient_specific_recommendation"
+      ],
+      "license_or_terms": "Vyu-owned synthetic fixture",
+      "owner": "Vyu",
+      "phi_pii_status": "none",
+      "rate_limit_policy": "not_applicable",
+      "retention_policy": "retain while POC fixtures are required",
+      "source_id": "dummy_corpus",
+      "source_type": "public_literature",
+      "update_cadence": "on_demand"
+    },
+    {
+      "access_policy": "local_artifact_generation",
+      "allowed_uses": [
+        "artifact_generation"
+      ],
+      "approval_status": "approved",
+      "approved_at": "2026-06-13T00:00:00Z",
+      "approved_by": "production-review-board",
+      "attribution_required": false,
+      "connector_config_ref": "local.golden_questions",
+      "display_name": "Synthetic Golden Questions",
+      "forbidden_uses": [
+        "clinical_decision_support",
+        "patient_specific_recommendation"
+      ],
+      "license_or_terms": "Vyu-owned synthetic fixture",
+      "owner": "Vyu",
+      "phi_pii_status": "none",
+      "rate_limit_policy": "not_applicable",
+      "retention_policy": "retain while POC fixtures are required",
+      "source_id": "golden_questions",
+      "source_type": "public_literature",
+      "update_cadence": "on_demand"
+    },
+    {
+      "access_policy": "all_approved_workspaces",
+      "allowed_uses": [
+        "literature_search",
+        "citation_metadata"
+      ],
+      "approval_status": "approved",
+      "approved_at": "2026-06-13T00:00:00Z",
+      "approved_by": "production-review-board",
+      "attribution_required": true,
+      "connector_config_ref": "connectors.pubmed",
+      "display_name": "PubMed",
+      "forbidden_uses": [
+        "bulk_full_text_without_terms_review"
+      ],
+      "license_or_terms": "NLM/NCBI usage terms",
+      "owner": "National Library of Medicine",
+      "phi_pii_status": "none",
+      "rate_limit_policy": "pubmed-default",
+      "retention_policy": "retain normalized metadata while source remains approved",
+      "source_id": "pubmed",
+      "source_type": "public_literature",
+      "update_cadence": "daily"
+    }
+  ]
+}

@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "package_name": "vyu-local-serverless-entrypoint",
+  "deployment_target": "serverless-http",
+  "runtime": "python3.11",
+  "handler": "apps.serverless.handler.handler",
+  "operator_config_env_var": "VYU_DEPLOYMENT_ENV_FILE",
+  "operator_config_example": "config/deployment.local.example.env",
+  "include_paths": [
+    "apps/__init__.py",
+    "apps/serverless/__init__.py",
+    "apps/serverless/handler.py",
+    "src/vyu",
+    "config/deployment.local.example.env",
+    "pyproject.toml"
+  ],
+  "exclude_paths": [
+    "config/deployment.local.env",
+    "upstreams",
+    ".venv",
+    "__pycache__",
+    "*.pyc"
+  ],
+  "required_validation_commands": [
+    [
+      "python",
+      "scripts/validate_deployment_config.py",
+      "--env-file",
+      "config/deployment.local.env"
+    ],
+    [
+      "python",
+      "scripts/validate_deployment_package.py",
+      "--manifest",
+      "deploy/serverless/package.manifest.json"
+    ],
+    [
+      "python",
+      "scripts/plan_deployment_package.py",
+      "--manifest",
+      "deploy/serverless/package.manifest.json",
+      "--output",
+      "outputs/deployment_package_inventory.json"
+    ],
+    [
+      "python",
+      "scripts/build_deployment_archive.py",
+      "--manifest",
+      "deploy/serverless/package.manifest.json",
+      "--archive",
+      "outputs/vyu_deployment_package.zip",
+      "--inventory",
+      "outputs/deployment_package_inventory.json"
+    ],
+    [
+      "python",
+      "scripts/write_deployment_package_evidence.py",
+      "--manifest",
+      "deploy/serverless/package.manifest.json",
+      "--archive",
+      "outputs/vyu_deployment_package.zip",
+      "--inventory",
+      "outputs/deployment_package_inventory.json",
+      "--output",
+      "outputs/deployment_package_evidence.json"
+    ],
+    [
+      "python",
+      "scripts/check_deployment_release_package.py",
+      "--manifest",
+      "deploy/serverless/package.manifest.json",
+      "--archive",
+      "outputs/vyu_deployment_package.zip",
+      "--inventory",
+      "outputs/deployment_package_inventory.json",
+      "--evidence",
+      "outputs/deployment_package_evidence.json",
+      "--output",
+      "outputs/deployment_release_package_checklist.json"
+    ],
+    [
+      "python",
+      "scripts/smoke_test_deployment.py",
+      "--env-file",
+      "config/deployment.local.env"
+    ]
+  ],
+  "infrastructure_managed_elsewhere": true,
+  "secret_values_in_manifest": false,
+  "notes": [
+    "This manifest is a local packaging contract only, not Terraform, CloudFormation, SAM, Serverless Framework, Docker, Kubernetes, or cloud IAM configuration.",
+    "The runtime must provide VYU_DEPLOYMENT_ENV_FILE at invocation time.",
+    "Real secrets must remain outside this manifest and outside committed config files."
+  ]
+}

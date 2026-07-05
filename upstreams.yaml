@@ -1,0 +1,60 @@
+upstreams:
+  google_biocompass:
+    repo: GoogleCloudPlatform/LifeSciences
+    repo_url: https://github.com/GoogleCloudPlatform/LifeSciences.git
+    path: applications/pharma-on-gemini-enterprise/biocompass-on-gemini-enterprise
+    local_path: upstreams/LifeSciences
+    license: Apache-2.0
+    usage: selected_components
+    reuse_policy: adapt_with_notice
+    required_attribution: retain Apache-2.0 notices for any copied or adapted files
+
+  google_pubmed_mcp:
+    repo: GoogleCloudPlatform/hcls-mcp-servers
+    repo_url: https://github.com/GoogleCloudPlatform/hcls-mcp-servers.git
+    path: pubmed_mcp
+    local_path: upstreams/hcls-mcp-servers
+    license: Apache-2.0
+    usage: connector_reference
+    reuse_policy: adapt_with_notice
+    required_attribution: retain Apache-2.0 notices for any copied or adapted files
+
+  medrag:
+    repo: gzxiong/MedRAG
+    repo_url: https://github.com/gzxiong/MedRAG.git
+    path: .
+    local_path: upstreams/MedRAG
+    license: US-Government-Public-Domain
+    usage: retriever_adapter
+    reuse_policy: adapt_with_model_and_corpus_review
+    required_attribution: record model corpus and dependency licences separately
+
+  zaoqu_pubmedrag:
+    repo: Zaoqu-Liu/PubMedRAG
+    repo_url: https://github.com/Zaoqu-Liu/PubMedRAG.git
+    path: .
+    local_path: upstreams/PubMedRAG
+    license: GPL-3.0
+    usage: reference_only
+    reuse_policy: do_not_copy_without_legal_approval
+    required_attribution: GPL review required before any source reuse
+
+  rag_gym:
+    repo: RAG-Gym/RAG-Gym
+    repo_url: https://github.com/RAG-Gym/RAG-Gym.git
+    path: .
+    local_path: upstreams/RAG-Gym
+    license: unverified
+    usage: reference_only
+    reuse_policy: do_not_copy_until_license_confirmed
+    required_attribution: licence must be clarified before source reuse
+
+  pubmedrag_simcse:
+    repo: HamsiniGupta/PubMedRAG
+    repo_url: https://github.com/HamsiniGupta/PubMedRAG.git
+    path: .
+    local_path: upstreams/PubMedRAG-SimCSE
+    license: unverified
+    usage: reference_only
+    reuse_policy: do_not_copy_until_license_confirmed
+    required_attribution: licence must be clarified before source reuse

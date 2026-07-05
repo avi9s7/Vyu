@@ -68,7 +68,7 @@ line-ending = "lf"
 
 [tool.mypy]
 python_version = "3.13"
-files = ["src/vyu/db", "scripts/verify.py"]
+files = ["src/vyu/db", "src/vyu/jobs", "scripts/verify.py"]
 check_untyped_defs = true
 disallow_any_generics = true
 disallow_incomplete_defs = true

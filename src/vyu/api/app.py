@@ -15,10 +15,13 @@ from src.vyu.api.exceptions import ApiError
 from src.vyu.api.middleware import RequestContextMiddleware
 from src.vyu.api.routers.auth_debug import create_auth_debug_router
 from src.vyu.api.routers.health import create_health_router, create_version_router
+from src.vyu.api.routers.research import create_research_router
 from src.vyu.api.settings import ApiSettings
 from src.vyu.auth.settings import AuthSettings
 from src.vyu.db.session import build_engine, build_session_factory
 from src.vyu.db.settings import DatabaseSettings
+from src.vyu.research.service import ResearchService
+from src.vyu.research.settings import ResearchSettings
 
 
 def current_schema_revision(engine: Engine) -> str:
@@ -44,6 +47,8 @@ def create_app(
     settings_override: ApiSettings | None = None,
     database_settings_override: DatabaseSettings | None = None,
     auth_settings_override: AuthSettings | None = None,
+    research_settings_override: ResearchSettings | None = None,
+    research_service_override: ResearchService | None = None,
     engine_override: Engine | None = None,
     schema_revision_override: str | None = None,
     session_factory_override: sessionmaker[Session] | None = None,
@@ -56,6 +61,8 @@ def create_app(
         engine, api_settings.expected_migration_revision
     )
     auth_settings, token_verifier = build_auth_runtime(auth_settings)
+    research_settings = research_settings_override or ResearchSettings(env=api_settings.env)
+    research_service = research_service_override or ResearchService.from_settings(research_settings)
     session_factory = session_factory_override or build_session_factory(engine)
 
     app = FastAPI(title="VYU API", version="0.1.0", openapi_url="/v1/openapi.json")
@@ -63,6 +70,8 @@ def create_app(
     app.state.database_settings = database_settings
     app.state.auth_settings = auth_settings
     app.state.token_verifier = token_verifier
+    app.state.research_settings = research_settings
+    app.state.research_service = research_service
     app.state.engine = engine
     app.state.schema_revision = schema_revision
     app.state.session_factory = session_factory
@@ -131,6 +140,7 @@ def create_app(
         create_version_router(settings=api_settings, schema_revision=schema_revision)
     )
     v1.include_router(create_auth_debug_router())
+    v1.include_router(create_research_router())
 
     @v1.get("/debug/boom", include_in_schema=False)
     def debug_boom() -> None:

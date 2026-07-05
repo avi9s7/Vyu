@@ -263,6 +263,35 @@ uv run mypy src/vyu/api src/vyu/auth
 
 *(PostgreSQL required for auth integration tests — Docker testcontainers locally or CI env vars.)*
 
+### 2026-07-05 — Task 6: Asynchronous research API (commit pending)
+
+**Goal:** Authenticated research search submission with idempotency, scoped reads, cancellation, events, and exported OpenAPI.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| Schemas | `src/vyu/api/schemas/research.py` |
+| Router | `src/vyu/api/routers/research.py` |
+| Service | `src/vyu/research/{settings,service}.py` |
+| OpenAPI | `scripts/export_openapi.py`, `docs/api/openapi.json` |
+| Tests | `tests/api/test_research_routes.py` |
+
+**Routes:**
+
+- `POST /v1/research/searches` — requires `Idempotency-Key`; atomically creates research run, job, outbox event, audit event, and initial run event; returns `202`.
+- `GET /v1/research/searches` — cursor-paginated list (tenant/workspace scoped via RLS).
+- `GET /v1/research/searches/{search_id}` — detail with links.
+- `GET /v1/research/searches/{search_id}/events` — ordered event stream.
+- `POST /v1/research/searches/{search_id}/cancel` — sets `cancel_requested`, cancels queued job, appends event (history preserved).
+
+**Verification:**
+
+```powershell
+uv run pytest tests/api/test_research_routes.py -q
+uv run python scripts/export_openapi.py --output docs/api/openapi.json
+```
+
 ### Planned scope (from spec — not yet implemented)
 
 - FastAPI application shell, `/v1` routes, Pydantic models

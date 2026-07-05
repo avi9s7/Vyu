@@ -178,6 +178,23 @@ def bearer_token(context: AuthTestContext, **overrides: object) -> str:
     return mint_hs256_token(**defaults)  # type: ignore[arg-type]
 
 
+def valid_research_payload(**overrides: object) -> dict[str, object]:
+    payload: dict[str, object] = {
+        "question": "What is the efficacy of VX-101 for episodic migraine prevention?",
+        "source_ids": ["pubmed"],
+        "only_approved_sources": True,
+    }
+    payload.update(overrides)
+    return payload
+
+
+def auth_headers(context: AuthTestContext, *, idempotency_key: str | None = None) -> dict[str, str]:
+    headers = {"Authorization": f"Bearer {bearer_token(context)}"}
+    if idempotency_key is not None:
+        headers["Idempotency-Key"] = idempotency_key
+    return headers
+
+
 def _b64_json(payload: Mapping[str, object]) -> str:
     return _b64(json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8"))
 

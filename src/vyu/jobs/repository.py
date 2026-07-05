@@ -202,6 +202,12 @@ class JobRepository:
         session.flush()
         return _to_record(row)
 
+    def get_job(self, job_id: UUID, session: Session) -> JobRecord | None:
+        row = session.scalar(select(Job).where(Job.id == job_id))
+        if row is None:
+            return None
+        return _to_record(row)
+
     def get_or_create_idempotent(
         self,
         request: IdempotencyRequest,

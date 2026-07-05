@@ -66,6 +66,84 @@ class SqsClient(Protocol):
     def send_message(self, *, QueueUrl: str, MessageBody: str) -> dict[str, Any]:
         ...
 
+    def receive_message(
+        self,
+        *,
+        QueueUrl: str,
+        MaxNumberOfMessages: int,
+        WaitTimeSeconds: int,
+        VisibilityTimeout: int,
+    ) -> dict[str, Any]:
+        ...
+
+    def delete_message(self, *, QueueUrl: str, ReceiptHandle: str) -> dict[str, Any]:
+        ...
+
+    def change_message_visibility(
+        self,
+        *,
+        QueueUrl: str,
+        ReceiptHandle: str,
+        VisibilityTimeout: int,
+    ) -> dict[str, Any]:
+        ...
+
+
+@dataclass(frozen=True)
+class ReceivedQueueMessage:
+    receipt_handle: str
+    message: QueueMessage
+    sqs_message_id: str
+
+
+@dataclass(frozen=True)
+class SqsConsumer:
+    queue_url: str
+    client: SqsClient
+    visibility_timeout_seconds: int = 30
+    long_poll_seconds: int = 20
+
+    def receive(self, *, max_messages: int = 1) -> list[ReceivedQueueMessage]:
+        response = self.client.receive_message(
+            QueueUrl=self.queue_url,
+            MaxNumberOfMessages=max(1, min(max_messages, 10)),
+            WaitTimeSeconds=self.long_poll_seconds,
+            VisibilityTimeout=self.visibility_timeout_seconds,
+        )
+        messages = response.get("Messages", [])
+        if not isinstance(messages, list):
+            return []
+        received: list[ReceivedQueueMessage] = []
+        for item in messages:
+            if not isinstance(item, dict):
+                continue
+            body_raw = item.get("Body")
+            receipt_handle = item.get("ReceiptHandle")
+            sqs_message_id = item.get("MessageId")
+            if not isinstance(body_raw, str) or not isinstance(receipt_handle, str):
+                continue
+            payload = json.loads(body_raw)
+            if not isinstance(payload, dict):
+                continue
+            received.append(
+                ReceivedQueueMessage(
+                    receipt_handle=receipt_handle,
+                    message=QueueMessage.from_payload(payload),
+                    sqs_message_id=str(sqs_message_id or ""),
+                )
+            )
+        return received
+
+    def delete(self, receipt_handle: str) -> None:
+        self.client.delete_message(QueueUrl=self.queue_url, ReceiptHandle=receipt_handle)
+
+    def extend_visibility(self, receipt_handle: str, timeout_seconds: int) -> None:
+        self.client.change_message_visibility(
+            QueueUrl=self.queue_url,
+            ReceiptHandle=receipt_handle,
+            VisibilityTimeout=max(0, timeout_seconds),
+        )
+
 
 @dataclass(frozen=True)
 class SqsQueue:

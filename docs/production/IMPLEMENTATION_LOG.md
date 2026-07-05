@@ -292,6 +292,18 @@ uv run pytest tests/api/test_research_routes.py -q
 uv run python scripts/export_openapi.py --output docs/api/openapi.json
 ```
 
+### 2026-07-05 — Task 7: Outbox publisher to SQS (commit pending)
+
+**Goal:** Publish minimal job messages from transactional outbox rows using `SKIP LOCKED` and a stubbable SQS adapter.
+
+**Key paths:** `src/vyu/jobs/{queue,outbox}.py`, `tests/integration/jobs/test_outbox_publisher.py`
+
+**Verification:**
+
+```powershell
+uv run pytest tests/integration/jobs/test_outbox_publisher.py -q
+```
+
 ### Planned scope (from spec — not yet implemented)
 
 - FastAPI application shell, `/v1` routes, Pydantic models

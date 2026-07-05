@@ -20,16 +20,18 @@ def test_audit_repository_append_only_and_scoped_list(postgres_urls: dict[str, s
     workspace_id = uuid4()
     settings = DatabaseSettings(database_url=postgres_urls["migration"])
     factory = build_session_factory(build_engine(settings))
+    scope = TenantScope(tenant_id=tenant_id, workspace_id=workspace_id)
     with factory.begin() as session:
-        repo = TenancyRepository(session)
-        repo.add_tenant(NewTenant(id=tenant_id, slug="audit-tenant", name="Audit Tenant"))
-        repo.add_workspace(
+        TenancyRepository(session).add_tenant(
+            NewTenant(id=tenant_id, slug="audit-tenant", name="Audit Tenant")
+        )
+    with transaction(factory, scope=scope) as session:
+        TenancyRepository(session).add_workspace(
             NewWorkspace(
                 id=workspace_id, tenant_id=tenant_id, slug="audit-ws", name="Audit WS"
             )
         )
 
-    scope = TenantScope(tenant_id=tenant_id, workspace_id=workspace_id)
     app_settings = DatabaseSettings(database_url=postgres_urls["app"])
     app_factory = build_session_factory(build_engine(app_settings))
     event_id = uuid4()

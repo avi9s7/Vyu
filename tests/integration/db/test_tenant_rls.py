@@ -35,12 +35,8 @@ def seeded_tenants(postgres_urls: dict[str, str]) -> dict[str, UUID]:
         repo = TenancyRepository(session)
         repo.add_tenant(NewTenant(id=tenant_a, slug="tenant-a", name="Tenant A"))
         repo.add_tenant(NewTenant(id=tenant_b, slug="tenant-b", name="Tenant B"))
-        repo.add_workspace(
-            NewWorkspace(id=workspace_a, tenant_id=tenant_a, slug="ws-a", name="WS A")
-        )
-        repo.add_workspace(
-            NewWorkspace(id=workspace_b, tenant_id=tenant_b, slug="ws-b", name="WS B")
-        )
+    with factory.begin() as session:
+        repo = TenancyRepository(session)
         repo.upsert_user(
             IdentityUser(
                 id=user_a,
@@ -57,6 +53,12 @@ def seeded_tenants(postgres_urls: dict[str, str]) -> dict[str, UUID]:
                 email="b@example.invalid",
             )
         )
+    scope_a = TenantScope(tenant_id=tenant_a, workspace_id=workspace_a)
+    with transaction(factory, scope=scope_a) as session:
+        repo = TenancyRepository(session)
+        repo.add_workspace(
+            NewWorkspace(id=workspace_a, tenant_id=tenant_a, slug="ws-a", name="WS A")
+        )
         repo.add_membership(
             NewMembership(
                 id=uuid4(),
@@ -65,6 +67,12 @@ def seeded_tenants(postgres_urls: dict[str, str]) -> dict[str, UUID]:
                 user_id=user_a,
                 role="reviewer",
             )
+        )
+    scope_b = TenantScope(tenant_id=tenant_b, workspace_id=workspace_b)
+    with transaction(factory, scope=scope_b) as session:
+        repo = TenancyRepository(session)
+        repo.add_workspace(
+            NewWorkspace(id=workspace_b, tenant_id=tenant_b, slug="ws-b", name="WS B")
         )
         repo.add_membership(
             NewMembership(

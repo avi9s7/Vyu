@@ -31,6 +31,17 @@ def test_tenancy_repository_uniqueness_and_active_membership(
         repo.add_tenant(NewTenant(id=tenant_id, slug="acme", name="Acme"))
         with pytest.raises(DuplicateRecordError):
             repo.add_tenant(NewTenant(id=uuid4(), slug="acme", name="Other"))
+    with factory.begin() as session:
+        TenancyRepository(session).upsert_user(
+            IdentityUser(
+                id=user_id,
+                issuer="https://issuer.example",
+                subject="user-1",
+                email="user@example.invalid",
+            )
+        )
+    with transaction(factory, scope=scope) as session:
+        repo = TenancyRepository(session)
         repo.add_workspace(
             NewWorkspace(id=workspace_id, tenant_id=tenant_id, slug="research", name="Research")
         )
@@ -40,14 +51,6 @@ def test_tenancy_repository_uniqueness_and_active_membership(
                     id=uuid4(), tenant_id=tenant_id, slug="research", name="Duplicate"
                 )
             )
-        repo.upsert_user(
-            IdentityUser(
-                id=user_id,
-                issuer="https://issuer.example",
-                subject="user-1",
-                email="user@example.invalid",
-            )
-        )
         repo.add_membership(
             NewMembership(
                 id=uuid4(),

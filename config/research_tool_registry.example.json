@@ -1,0 +1,115 @@
+{
+  "tools": [
+    {
+      "approved": true,
+      "allowed_actions": [
+        "search"
+      ],
+      "allowed_uses": [
+        "literature_search",
+        "citation_metadata"
+      ],
+      "capabilities": [
+        "search",
+        "citation_metadata"
+      ],
+      "connector_name": "pubmed",
+      "description": "Approved PubMed search tool routed through the governed connector runtime.",
+      "display_name": "PubMed Literature Search",
+      "max_results": 20,
+      "policy_version": "research_tool_policy_v1",
+      "source_id": "pubmed",
+      "tenant_ids": [],
+      "tool_id": "pubmed.search",
+      "workspace_ids": []
+    },
+    {
+      "approved": false,
+      "allowed_actions": [
+        "search"
+      ],
+      "allowed_uses": [
+        "literature_search"
+      ],
+      "capabilities": [
+        "search",
+        "citation_graph"
+      ],
+      "connector_name": "semantic_scholar",
+      "description": "Planned Semantic Scholar connector. Blocked until source terms, connector configuration, and staged replay tests are approved.",
+      "display_name": "Semantic Scholar Search",
+      "max_results": 10,
+      "policy_version": "research_tool_policy_v1",
+      "source_id": "semantic_scholar",
+      "tenant_ids": [],
+      "tool_id": "semantic_scholar.search",
+      "workspace_ids": []
+    },
+    {
+      "approved": false,
+      "allowed_actions": [
+        "search"
+      ],
+      "allowed_uses": [
+        "trial_search"
+      ],
+      "capabilities": [
+        "search",
+        "trial_registry"
+      ],
+      "connector_name": "clinical_trials",
+      "description": "Planned ClinicalTrials.gov connector. Blocked until source approval and replay fixtures are available.",
+      "display_name": "ClinicalTrials.gov Search",
+      "max_results": 10,
+      "policy_version": "research_tool_policy_v1",
+      "source_id": "clinical_trials",
+      "tenant_ids": [],
+      "tool_id": "clinical_trials.search",
+      "workspace_ids": []
+    },
+    {
+      "approved": false,
+      "allowed_actions": [
+        "search"
+      ],
+      "allowed_uses": [
+        "guideline_search"
+      ],
+      "capabilities": [
+        "search",
+        "guideline_lookup"
+      ],
+      "connector_name": "guidelines",
+      "description": "Planned guideline-source connector. Blocked until approved guideline sources are registered.",
+      "display_name": "Guideline Source Search",
+      "max_results": 10,
+      "policy_version": "research_tool_policy_v1",
+      "source_id": "guidelines",
+      "tenant_ids": [],
+      "tool_id": "guidelines.search",
+      "workspace_ids": []
+    },
+    {
+      "approved": false,
+      "allowed_actions": [
+        "search"
+      ],
+      "allowed_uses": [
+        "internal_document_search"
+      ],
+      "capabilities": [
+        "search",
+        "tenant_document_lookup"
+      ],
+      "connector_name": "internal_documents",
+      "description": "Planned tenant-scoped internal document connector. Blocked until tenant dataset approval and privacy controls are bound.",
+      "display_name": "Internal Document Search",
+      "max_results": 10,
+      "policy_version": "research_tool_policy_v1",
+      "source_id": "internal_documents",
+      "tenant_ids": [],
+      "tool_id": "internal_documents.search",
+      "workspace_ids": []
+    }
+  ]
+}

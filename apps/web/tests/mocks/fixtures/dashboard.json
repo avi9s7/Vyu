@@ -1,0 +1,68 @@
+{
+  "kpis": {
+    "activeResearchProjects": 3,
+    "evidenceReportsCreated": 7,
+    "pendingReviews": 2,
+    "governanceAlerts": 1
+  },
+  "recentActivity": [
+    {
+      "id": "act-001",
+      "label": "CKD SGLT2 evidence search completed",
+      "actor": "Local Researcher",
+      "createdAt": "2026-06-16T09:15:00Z",
+      "status": "completed"
+    },
+    {
+      "id": "act-002",
+      "label": "Evidence brief routed for human review",
+      "actor": "Governance workflow",
+      "createdAt": "2026-06-16T10:20:00Z",
+      "status": "pending"
+    },
+    {
+      "id": "act-003",
+      "label": "Report export blocked pending approval",
+      "actor": "Export gate",
+      "createdAt": "2026-06-16T11:05:00Z",
+      "status": "needs_review"
+    }
+  ],
+  "recommendedEvidence": [
+    {
+      "id": "src-001",
+      "title": "KDIGO chronic kidney disease guideline excerpt",
+      "sourceType": "Guideline",
+      "quality": "high",
+      "updatedAt": "2026-06-15T08:00:00Z"
+    },
+    {
+      "id": "src-002",
+      "title": "SGLT2 inhibitor renal outcomes systematic review",
+      "sourceType": "SystematicReview",
+      "quality": "high",
+      "updatedAt": "2026-06-14T12:30:00Z"
+    },
+    {
+      "id": "src-003",
+      "title": "Internal formulary evidence appendix",
+      "sourceType": "InternalDocument",
+      "quality": "moderate",
+      "updatedAt": "2026-06-13T17:45:00Z"
+    }
+  ],
+  "reviewQueuePreview": [
+    {
+      "id": "review-001",
+      "title": "Evidence brief export for CKD SGLT2 question",
+      "priority": "high",
+      "dueDate": "2026-06-18"
+    },
+    {
+      "id": "review-002",
+      "title": "Source quality override request",
+      "priority": "medium",
+      "dueDate": "2026-06-20"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+aws_region  = "us-east-1"
+name_prefix = "vyu-prod"
+
+callback_urls = [
+  "https://app.example.com/auth/callback",
+]
+
+logout_urls = [
+  "https://app.example.com/logout",
+]
+
+# Must be globally unique in the AWS region/account partition.
+cognito_domain_prefix = "vyu-prod-login-example"
+
+resource_server_identifier = "https://api.example.com"
+
+# Optional SAML federation through Cognito. Attribute mappings should map the
+# upstream IdP attributes into Cognito attributes that Vyu can read as JWT claims.
+# saml_identity_providers = {
+#   Okta = {
+#     metadata_url = "https://example.okta.com/app/xxxxxxxx/sso/saml/metadata"
+#     attribute_mapping = {
+#       email                   = "email"
+#       email_verified          = "email_verified"
+#       "custom:vyu_tenant_id"    = "vyu_tenant_id"
+#       "custom:vyu_workspace_id" = "vyu_workspace_id"
+#       "custom:vyu_roles"        = "vyu_roles"
+#     }
+#   }
+# }
+
+tags = {
+  Environment = "production"
+  Owner       = "platform"
+}

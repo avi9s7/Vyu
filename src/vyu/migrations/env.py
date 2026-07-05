@@ -7,6 +7,7 @@ from sqlalchemy import engine_from_config, pool
 
 from src.vyu.db.models import Base
 from src.vyu.db.settings import DatabaseSettings
+import src.vyu.jobs.models  # noqa: F401
 
 config = context.config
 if config.config_file_name is not None:

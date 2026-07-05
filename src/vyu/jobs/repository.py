@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 from typing import Callable
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -27,6 +27,10 @@ FAILED_TO = frozenset({"queued"})
 
 def _utcnow() -> datetime:
     return datetime.now(tz=UTC)
+
+
+def _now(now: datetime | None = None) -> datetime:
+    return now if now is not None else _utcnow()
 
 
 def _to_record(row: Job) -> JobRecord:
@@ -88,8 +92,10 @@ class JobRepository:
         worker_id: str,
         lease_seconds: int,
         session: Session,
+        *,
+        now: datetime | None = None,
     ) -> JobLease | None:
-        now = _utcnow()
+        now = _now(now)
         row = session.scalar(
             select(Job)
             .where(
@@ -124,11 +130,13 @@ class JobRepository:
         worker_id: str,
         lease_seconds: int,
         session: Session,
+        *,
+        now: datetime | None = None,
     ) -> JobLease:
         row = session.scalar(select(Job).where(Job.id == job_id).with_for_update())
         if row is None or row.lease_owner != worker_id or row.status != "running":
             raise InvalidJobTransition("cannot extend lease for job")
-        leased_until = _utcnow() + timedelta(seconds=lease_seconds)
+        leased_until = _now(now) + timedelta(seconds=lease_seconds)
         row.leased_until = leased_until
         session.flush()
         return JobLease(
@@ -144,12 +152,14 @@ class JobRepository:
         worker_id: str,
         result: dict[str, object],
         session: Session,
+        *,
+        now: datetime | None = None,
     ) -> JobRecord:
         row = session.scalar(select(Job).where(Job.id == job_id).with_for_update())
         if row is None or row.lease_owner != worker_id:
             raise InvalidJobTransition("cannot complete job")
         _assert_transition(row.status, "succeeded")
-        now = _utcnow()
+        now = _now(now)
         row.status = "succeeded"
         row.result = result
         row.completed_at = now
@@ -165,12 +175,14 @@ class JobRepository:
         error_code: str,
         retry_at: datetime | None,
         session: Session,
+        *,
+        now: datetime | None = None,
     ) -> JobRecord:
         row = session.scalar(select(Job).where(Job.id == job_id).with_for_update())
         if row is None or row.lease_owner != worker_id:
             raise InvalidJobTransition("cannot fail job")
         _assert_transition(row.status, "failed")
-        now = _utcnow()
+        now = _now(now)
         row.error_code = error_code
         row.leased_until = None
         row.lease_owner = None
@@ -233,6 +245,7 @@ class JobRepository:
             )
         resource_type, resource_id, response_status = create_resource()
         row = IdempotencyKey(
+            id=uuid4(),
             tenant_id=request.tenant_id,
             actor_id=request.actor_id,
             route=request.route,

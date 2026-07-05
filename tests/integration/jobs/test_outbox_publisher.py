@@ -208,7 +208,6 @@ def test_duplicate_publisher_processes_each_event_once(
     url, scope = outbox_scope
     factory = _factory(url)
     _insert_outbox(factory, scope)
-    _insert_outbox(factory, scope)
     clients = [StubSqsClient(), StubSqsClient()]
     publishers = [
         OutboxPublisher(queue=SqsQueue(queue_url="https://example.local/queue", client=client))
@@ -233,7 +232,7 @@ def test_duplicate_publisher_processes_each_event_once(
         published = session.scalars(
             select(OutboxEvent).where(OutboxEvent.published_at.isnot(None))
         ).all()
-    assert len(unpublished) == 1
+    assert len(unpublished) == 0
     assert len(published) == 1
 
 

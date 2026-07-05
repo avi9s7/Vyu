@@ -70,11 +70,17 @@ def test_job_migration_upgrade_downgrade_and_repeat(postgres_urls: dict[str, str
             cursor.execute(
                 """
                 SELECT conname FROM pg_constraint
-                WHERE conname IN ('jobs_status_valid', 'research_runs_status_valid')
+                WHERE conname IN (
+                    'ck_jobs_jobs_status_valid',
+                    'ck_research_runs_research_runs_status_valid'
+                )
                 """
             )
             constraints = {row[0] for row in cursor.fetchall()}
-            assert constraints == {"jobs_status_valid", "research_runs_status_valid"}
+            assert constraints == {
+                "ck_jobs_jobs_status_valid",
+                "ck_research_runs_research_runs_status_valid",
+            }
 
             cursor.execute(
                 """

@@ -73,6 +73,7 @@ class JobWorker:
         for statement, parameters in tenant_scope_statements(scope):
             session.execute(statement, parameters)
 
+        now = self.clock()
         job_id = UUID(message.job_id)
         job = self.repository.get_job(job_id, session)
         if job is None:
@@ -81,7 +82,7 @@ class JobWorker:
         if job.status in TERMINAL_STATUSES or job.status == "failed":
             return MessageDisposition.ACK
 
-        if job.status == "queued" and job.available_at > self.clock():
+        if job.status == "queued" and job.available_at > now:
             return MessageDisposition.NACK
 
         lease = self.repository.acquire_job(
@@ -89,6 +90,7 @@ class JobWorker:
             self.settings.worker_id,
             self.settings.lease_seconds,
             session,
+            now=now,
         )
         if lease is None:
             current = self.repository.get_job(job_id, session)
@@ -102,6 +104,7 @@ class JobWorker:
                 self.settings.worker_id,
                 self.settings.lease_seconds,
                 session,
+                now=self.clock(),
             )
 
         handler = self.handlers.get(job.kind)
@@ -112,6 +115,7 @@ class JobWorker:
                 "unknown_job_kind",
                 None,
                 session,
+                now=now,
             )
             return MessageDisposition.ACK
 
@@ -128,6 +132,7 @@ class JobWorker:
                 "handler_exception",
                 self._retry_at(job.attempt + 1),
                 session,
+                now=self.clock(),
             )
             return MessageDisposition.ACK
 
@@ -137,6 +142,7 @@ class JobWorker:
                 self.settings.worker_id,
                 result.result or {"status": "succeeded"},
                 session,
+                now=self.clock(),
             )
             return MessageDisposition.ACK
 
@@ -147,6 +153,7 @@ class JobWorker:
                 result.error_code or "retryable_failure",
                 self._retry_at(job.attempt + 1),
                 session,
+                now=self.clock(),
             )
             return MessageDisposition.ACK
 
@@ -156,6 +163,7 @@ class JobWorker:
             result.error_code or "terminal_failure",
             None,
             session,
+            now=self.clock(),
         )
         return MessageDisposition.ACK
 

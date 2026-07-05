@@ -83,6 +83,19 @@ def _create_job(
         return row
 
 
+def _align_job_available_at(
+    factory,
+    scope: TenantScope,
+    job_id,
+    *,
+    available_at: datetime,
+) -> None:
+    with transaction(factory, scope=scope) as session:
+        row = session.scalar(select(Job).where(Job.id == job_id))
+        assert row is not None
+        row.available_at = available_at
+
+
 @pytest.fixture
 def worker_scope(postgres_urls: dict[str, str]) -> tuple[str, TenantScope]:
     tenant_id = uuid4()
@@ -215,6 +228,7 @@ def test_heartbeat_extends_lease(worker_scope: tuple[str, TenantScope]) -> None:
     factory = _factory(url)
     fixed_now = datetime(2026, 7, 5, 12, 0, tzinfo=UTC)
     job = _create_job(factory, scope, payload={"simulate": "heartbeat"})
+    _align_job_available_at(factory, scope, job.id, available_at=fixed_now)
     worker = JobWorker(
         repository=JobRepository(),
         settings=WorkerSettings(worker_id="worker-a", lease_seconds=30),
@@ -237,6 +251,7 @@ def test_retry_exhaustion_marks_job_failed(
     factory = _factory(url)
     job = _create_job(factory, scope, payload={"simulate": "retry"}, max_attempts=2)
     fixed_now = datetime(2026, 7, 5, 12, 0, tzinfo=UTC)
+    _align_job_available_at(factory, scope, job.id, available_at=fixed_now)
     worker = JobWorker(
         repository=JobRepository(),
         settings=WorkerSettings(worker_id="worker-a", retry_base_seconds=1, retry_max_seconds=1),

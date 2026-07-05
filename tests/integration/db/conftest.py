@@ -29,13 +29,20 @@ def _sqlalchemy_psycopg_url(container: PostgresContainer, user: str, password: s
     )
 
 
-def _bootstrap_roles(container: PostgresContainer) -> None:
-    dbname = container.dbname
-    with psycopg.connect(_psycopg_url(container), autocommit=True) as connection:
+def _bootstrap_roles_psycopg_url(psycopg_url: str, dbname: str) -> None:
+    with psycopg.connect(psycopg_url, autocommit=True) as connection:
         connection.execute(
             f"""
-            CREATE ROLE vyu_migrator WITH LOGIN PASSWORD 'local-migrator-password';
-            CREATE ROLE vyu_app WITH LOGIN PASSWORD 'local-vyu-password';
+            DO $$
+            BEGIN
+              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'vyu_migrator') THEN
+                CREATE ROLE vyu_migrator WITH LOGIN PASSWORD 'local-migrator-password';
+              END IF;
+              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'vyu_app') THEN
+                CREATE ROLE vyu_app WITH LOGIN PASSWORD 'local-vyu-password';
+              END IF;
+            END
+            $$;
             REVOKE CREATE ON SCHEMA public FROM PUBLIC;
             GRANT ALL PRIVILEGES ON DATABASE {dbname} TO vyu_migrator;
             GRANT CREATE ON SCHEMA public TO vyu_migrator;
@@ -44,6 +51,10 @@ def _bootstrap_roles(container: PostgresContainer) -> None:
             ALTER ROLE vyu_migrator NOBYPASSRLS;
             """
         )
+
+
+def _bootstrap_roles(container: PostgresContainer) -> None:
+    _bootstrap_roles_psycopg_url(_psycopg_url(container), container.dbname)
 
 
 def _run_alembic(database_url: str, *args: str) -> None:
@@ -60,18 +71,30 @@ def _run_alembic(database_url: str, *args: str) -> None:
 
 @pytest.fixture(scope="session")
 def postgres_urls() -> Iterator[dict[str, str]]:
+    migration_url = os.environ.get("VYU_MIGRATION_DATABASE_URL")
+    app_url = os.environ.get("VYU_DATABASE_URL")
+    if migration_url and app_url:
+        admin_url = os.environ.get("VYU_ADMIN_DATABASE_URL", migration_url)
+        admin_psycopg = admin_url.replace("postgresql+psycopg://", "postgresql://")
+        dbname = admin_psycopg.rsplit("/", 1)[-1]
+        _bootstrap_roles_psycopg_url(admin_psycopg, dbname)
+        _run_alembic(migration_url, "upgrade", "head")
+        yield {
+            "migration": migration_url,
+            "app": app_url,
+            "admin": migration_url,
+        }
+        return
+
     with PostgresContainer("pgvector/pgvector:0.8.0-pg17") as container:
         _bootstrap_roles(container)
         migration_url = _sqlalchemy_psycopg_url(
             container, "vyu_migrator", "local-migrator-password"
         )
         app_url = _sqlalchemy_psycopg_url(container, "vyu_app", "local-vyu-password")
-        admin_url = _sqlalchemy_psycopg_url(
-            container, container.username, container.password
-        )
         _run_alembic(migration_url, "upgrade", "head")
         yield {
             "migration": migration_url,
             "app": app_url,
-            "admin": admin_url,
+            "admin": migration_url,
         }

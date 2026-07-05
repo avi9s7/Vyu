@@ -40,26 +40,9 @@ jobs:
           enable-cache: true
       - name: Install locked dependencies
         run: uv sync --all-groups --frozen
-      - name: Bootstrap PostgreSQL roles
-        run: |
-          sudo apt-get update && sudo apt-get install -y postgresql-client
-          PGPASSWORD=test psql -h localhost -U test -d vyu <<'SQL'
-          CREATE ROLE vyu_migrator WITH LOGIN PASSWORD 'local-migrator-password';
-          CREATE ROLE vyu_app WITH LOGIN PASSWORD 'local-vyu-password';
-          REVOKE CREATE ON SCHEMA public FROM PUBLIC;
-          GRANT ALL PRIVILEGES ON DATABASE vyu TO vyu_migrator;
-          GRANT CREATE ON SCHEMA public TO vyu_migrator;
-          GRANT USAGE ON SCHEMA public TO vyu_app;
-          ALTER ROLE vyu_app NOBYPASSRLS NOSUPERUSER;
-          ALTER ROLE vyu_migrator NOBYPASSRLS;
-          SQL
-      - name: Run database migrations
-        env:
-          VYU_MIGRATION_DATABASE_URL: postgresql+psycopg://vyu_migrator:local-migrator-password@127.0.0.1:5432/vyu
-          VYU_DATABASE_URL: postgresql+psycopg://vyu_app:local-vyu-password@127.0.0.1:5432/vyu
-        run: uv run alembic upgrade head
       - name: Run backend verification
         env:
+          VYU_ADMIN_DATABASE_URL: postgresql+psycopg://test:test@127.0.0.1:5432/vyu
           VYU_MIGRATION_DATABASE_URL: postgresql+psycopg://vyu_migrator:local-migrator-password@127.0.0.1:5432/vyu
           VYU_DATABASE_URL: postgresql+psycopg://vyu_app:local-vyu-password@127.0.0.1:5432/vyu
         run: |

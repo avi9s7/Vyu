@@ -200,7 +200,7 @@ For every task:
 8. Run the narrow test and confirm it passes.
 9. Run the task's broader regression command.
 10. Inspect the diff for secrets, generated artifacts, unrelated edits, and unsafe logging.
-11. Update documentation and the implementation status record named by the plan.
+11. Update documentation, [`IMPLEMENTATION_LOG.md`](IMPLEMENTATION_LOG.md), and the implementation status record named by the plan.
 12. Commit only the task's files with the plan's commit message.
 13. Open a pull request with test output, security/privacy impact, migration impact, deployment impact, and rollback instructions.
 14. Wait for required review and CI. Do not merge your own change without the repository's approved review policy.
@@ -319,7 +319,9 @@ A pull request is done only when:
 
 ## 17. Status Tracking
 
-Create `docs/production/IMPLEMENTATION_STATUS.md` during Plan 1. It must contain one row per plan with:
+Create `docs/production/IMPLEMENTATION_STATUS.md` during Plan 1. Maintain `docs/production/IMPLEMENTATION_LOG.md` as the running history of merged work, decisions, CI fixes, and verification commands.
+
+`IMPLEMENTATION_STATUS.md` must contain one row per plan with:
 
 - Status: `not_started`, `in_progress`, `blocked`, `staging_verified`, or `complete`.
 - Owner.
@@ -331,6 +333,8 @@ Create `docs/production/IMPLEMENTATION_STATUS.md` during Plan 1. It must contain
 - Known blockers.
 
 `complete` means the plan's exit gate has executable evidence. It does not mean files exist or unit tests pass.
+
+Update `IMPLEMENTATION_LOG.md` in the same pull request whenever behavior, schema, CI, or operational steps change. Use the log's update rule template for each task or merged PR.
 
 ## 18. When VYU May Be Called Production
 

@@ -1,12 +1,14 @@
 # VYU Production Implementation Status
 
-Last verified Git SHA: ff3b90e6c4b1b683604c39b6db0941a2964c4788  
+Last verified Git SHA: 6002d02f  
 Last verified date: 2026-07-05  
 Overall state: development POC  
 
 Allowed states: `not_started`, `in_progress`, `blocked`, `staging_verified`, `complete`.
 
 Local JSON and SQLite artifacts are not production evidence. A plan reaches `complete` only when its exit gate has executable evidence bound to the recorded Git SHA.
+
+Detailed build history, decisions, and CI fixes: [`IMPLEMENTATION_LOG.md`](IMPLEMENTATION_LOG.md).
 
 | # | Workstream | Status | Owner | Issue/PR | Entry evidence | Exit evidence | Blockers |
 | ---: | --- | --- | --- | --- | --- | --- | --- |
@@ -24,3 +26,5 @@ Local JSON and SQLite artifacts are not production evidence. A plan reaches `com
 ## Update Rule
 
 Update one row in the same pull request that changes its evidence. Include command output or a durable staging evidence link. Never mark a row complete because files exist, unit tests pass, or a local readiness JSON says approved.
+
+Append the same evidence to [`IMPLEMENTATION_LOG.md`](IMPLEMENTATION_LOG.md) per its update rule.

@@ -34,7 +34,7 @@ Start with:
 
 Use one task, one short-lived branch, and one focused pull request at a time. Follow the red-test, implementation, passing-test, regression, documentation, evidence, and review sequence in the handbook.
 
-Do not mark a plan complete because its document exists or its code compiles. Update `docs/production/IMPLEMENTATION_STATUS.md` only after the plan's exit gate has executable evidence bound to the merge SHA and deployed version.
+Do not mark a plan complete because its document exists or its code compiles. Update `docs/production/IMPLEMENTATION_STATUS.md` only after the plan's exit gate has executable evidence bound to the merge SHA and deployed version. Append the same work to `docs/production/IMPLEMENTATION_LOG.md` in every implementation PR.
 
 ## Scope Rule
 

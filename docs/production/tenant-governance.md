@@ -100,6 +100,38 @@ AWS-hosted deployments can use `VYU_AUTH_MODE=oidc_jwks` to validate RS256 OIDC 
 
 A successful IdP JWT is still only an authenticated claim set. Tenant governance remains the authority for tenant, workspace, grant, service-account, API-key, and break-glass entitlement decisions.
 
+## PostgreSQL Registry Import
+
+After Plan 2 staging verification, the JSON registry is a migration input only. PostgreSQL becomes the authoritative store for tenants, workspaces, users, and memberships.
+
+Prerequisites:
+
+- `docker compose up -d postgres`
+- `uv run alembic upgrade head`
+- Backup any existing local PostgreSQL data before applying to a non-empty database
+
+Dry-run:
+
+```powershell
+uv run python scripts/import_tenant_registry.py --registry config/tenant_governance.local.example.json --dry-run
+```
+
+Apply:
+
+```powershell
+uv run python scripts/import_tenant_registry.py --registry config/tenant_governance.local.example.json --apply
+```
+
+Verification query:
+
+```sql
+SELECT slug, status FROM tenants;
+SELECT tenant_id, slug, status FROM workspaces;
+SELECT role, status FROM memberships;
+```
+
+Re-running `--apply` must create zero duplicate records. Roll back by restoring the database snapshot taken before the first apply. After a successful import, JSON edits are not authoritative until re-imported through the same script.
+
 ## Current Limits
 
 - The JSON-backed repository is suitable for local/serverless operation and deterministic release evidence; high-volume SaaS operation should move the same schema to transactional database-backed administration.

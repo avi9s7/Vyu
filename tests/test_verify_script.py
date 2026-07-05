@@ -30,9 +30,22 @@ class VerifyScriptTests(unittest.TestCase):
             commands,
         )
 
+    def test_integration_scope_runs_database_tests(self) -> None:
+        commands = commands_for_scope("integration", npm="npm")
+        self.assertEqual(
+            [
+                Command(
+                    "postgres-integration",
+                    ("uv", "run", "pytest", "tests/integration/db", "-q"),
+                ),
+            ],
+            commands,
+        )
+
     def test_all_scope_orders_backend_before_frontend(self) -> None:
         names = [command.name for command in commands_for_scope("all", npm="npm")]
         self.assertEqual("ruff", names[0])
+        self.assertEqual("postgres-integration", names[3])
         self.assertEqual("frontend-build", names[-1])
 
 

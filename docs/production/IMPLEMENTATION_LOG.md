@@ -325,6 +325,13 @@ uv run python scripts/export_openapi.py --output docs/api/openapi.json
 uv run python scripts/verify.py --scope backend
 ```
 
+**CI:** [run 28770959996](https://github.com/avi9s7/Vyu/actions/runs/28770959996) @ `dd674d2a` — backend, frontend, platform success.
+
+### 2026-07-06 — CI fixes: API tests + Docker digest (commits `37f14d43`, `871dc6f8`, `dd674d2a`)
+
+- API integration: tenancy seed isolation, JWT `exp` beyond 60s leeway, inactive-user email alignment.
+- Platform: corrected truncated `python:3.13-slim-bookworm` digest in `deploy/docker/{api,worker}.Dockerfile`.
+
 **Open PR:** https://github.com/avi9s7/Vyu/compare/main...cursor/fastapi-jobs-plan-3
 
 ---

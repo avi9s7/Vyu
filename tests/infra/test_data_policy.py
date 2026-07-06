@@ -60,7 +60,7 @@ def test_queues_define_dlqs_and_redrive_policies() -> None:
 
 
 def test_queue_cloudwatch_alarms_exist() -> None:
-    content = _read_module_tf(QUEUES_MODULE)
+    content = (ROOT / "infra" / "terraform" / "modules" / "observability" / "alarms.tf").read_text(encoding="utf-8")
     assert 'resource "aws_cloudwatch_metric_alarm" "queue_depth"' in content
     assert 'resource "aws_cloudwatch_metric_alarm" "queue_age"' in content
     assert 'resource "aws_cloudwatch_metric_alarm" "dlq_messages"' in content

@@ -10,6 +10,10 @@ output "database_master_user_secret_arn" {
   value = aws_db_instance.postgres.master_user_secret[0].secret_arn
 }
 
+output "database_instance_identifier" {
+  value = aws_db_instance.postgres.id
+}
+
 output "bucket_names" {
   value = { for key, bucket in aws_s3_bucket.application : key => bucket.bucket }
 }

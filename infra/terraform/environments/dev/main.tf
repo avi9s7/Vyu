@@ -85,9 +85,22 @@ module "edge" {
 }
 
 module "observability" {
-  source      = "../../modules/observability"
-  environment = var.environment
-  aws_region  = var.aws_region
+  source = "../../modules/observability"
+
+  environment                       = var.environment
+  aws_region                        = var.aws_region
+  logs_kms_key_arn                  = module.kms.logs_key_arn
+  alb_arn_suffix                    = module.compute.alb_arn_suffix
+  ecs_cluster_name                  = module.compute.cluster_name
+  ecs_service_names                 = module.compute.service_names
+  database_instance_identifier      = module.data.database_instance_identifier
+  cognito_user_pool_id              = module.identity.user_pool_id
+  waf_web_acl_name                  = module.edge.waf_web_acl_name
+  service_log_group_names           = module.compute.log_group_names
+  queue_names                       = module.queues.queue_names
+  dlq_names                         = module.queues.dlq_names
+  on_call_email_addresses           = var.observability_on_call_email_addresses
+  critical_alarm_owner_acknowledged = var.observability_critical_alarm_owner_acknowledged
 }
 
 module "github_oidc" {

@@ -21,3 +21,7 @@ output "primary_domain_name" {
 output "waf_web_acl_arn" {
   value = aws_wafv2_web_acl.cloudfront.arn
 }
+
+output "waf_web_acl_name" {
+  value = aws_wafv2_web_acl.cloudfront.name
+}

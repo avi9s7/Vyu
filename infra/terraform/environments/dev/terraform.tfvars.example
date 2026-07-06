@@ -1,3 +1,14 @@
 environment          = "dev"
 aws_region           = "ap-south-1"
 single_nat_gateway   = true
+
+identity_callback_urls = [
+  "https://dev.app.vyu.example/auth/callback",
+]
+
+identity_logout_urls = [
+  "https://dev.app.vyu.example/logout",
+]
+
+identity_cognito_domain_prefix      = "vyu-dev-login-example"
+identity_resource_server_identifier = "https://api.dev.vyu.example"

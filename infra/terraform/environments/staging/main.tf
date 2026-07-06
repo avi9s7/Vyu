@@ -33,9 +33,16 @@ module "queues" {
 }
 
 module "identity" {
-  source      = "../../modules/identity"
-  environment = var.environment
-  aws_region  = var.aws_region
+  source = "../../modules/identity"
+
+  environment                  = var.environment
+  aws_region                   = var.aws_region
+  callback_urls                = var.identity_callback_urls
+  logout_urls                  = var.identity_logout_urls
+  cognito_domain_prefix        = var.identity_cognito_domain_prefix
+  resource_server_identifier   = var.identity_resource_server_identifier
+  saml_identity_providers      = var.identity_saml_identity_providers
+  oidc_identity_providers      = var.identity_oidc_identity_providers
 }
 
 module "edge" {

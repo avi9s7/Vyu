@@ -52,9 +52,25 @@ module "edge" {
 }
 
 module "compute" {
-  source      = "../../modules/compute"
-  environment = var.environment
-  aws_region  = var.aws_region
+  source = "../../modules/compute"
+
+  environment                     = var.environment
+  aws_region                      = var.aws_region
+  vpc_id                          = module.network.vpc_id
+  public_subnet_ids               = module.network.public_subnet_ids
+  private_subnet_ids              = module.network.private_subnet_ids
+  security_group_ids              = module.network.security_group_ids
+  logs_kms_key_arn                = module.kms.logs_key_arn
+  data_kms_key_arn                = module.kms.data_key_arn
+  secrets_kms_key_arn             = module.kms.secrets_key_arn
+  database_master_user_secret_arn = module.data.database_master_user_secret_arn
+  secret_arns                     = module.data.secret_arns
+  bucket_names                    = module.data.bucket_names
+  queue_arns                      = module.queues.queue_arns
+  queue_urls                      = module.queues.queue_urls
+  image_digests                   = var.compute_image_digests
+  ecr_push_role_arns              = var.compute_ecr_push_role_arns
+  alb_certificate_arn             = var.compute_alb_certificate_arn
 }
 
 module "observability" {

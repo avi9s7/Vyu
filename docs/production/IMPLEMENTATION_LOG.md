@@ -434,7 +434,7 @@ terraform -chdir=infra/terraform/environments/dev validate
 uv run pytest tests/infra/test_edge_policy.py -q
 ```
 
-### 2026-07-06 — Plan 4 Task 7: Production telemetry and alarms (commit pending)
+### 2026-07-06 — Plan 4 Task 7: Production telemetry and alarms (commit `b267c8c4`)
 
 **Goal:** SNS alarm routing, CloudWatch dashboards/alarms, ADOT collector config, structured JSON logging with redaction, and OpenTelemetry export hooks.
 

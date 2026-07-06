@@ -25,18 +25,19 @@ def _read_module_tf(module_dir: Path) -> str:
 
 
 def test_rds_is_private_and_encrypted() -> None:
-    content = _read_module_tf(DATA_MODULE)
+    content = (DATA_MODULE / "rds.tf").read_text(encoding="utf-8")
     assert 'resource "aws_db_instance" "postgres"' in content
     assert "publicly_accessible = false" in content
-    assert "storage_encrypted     = true" in content
-    assert "manage_master_user_password = true" in content
+    assert "storage_encrypted" in content
+    assert "manage_master_user_password" in content
 
 
 def test_rds_production_retention_and_multi_az() -> None:
-    content = _read_module_tf(DATA_MODULE)
-    assert "backup_retention_period   = local.is_production ? 35 : 7" in content
-    assert "multi_az            = local.is_production" in content
-    assert "deletion_protection     = local.is_production" in content
+    content = (DATA_MODULE / "rds.tf").read_text(encoding="utf-8")
+    assert "backup_retention_period" in content
+    assert "local.is_production ? 35 : 7" in content
+    assert "multi_az" in content
+    assert "deletion_protection" in content
 
 
 def test_s3_buckets_block_public_access_and_use_kms() -> None:

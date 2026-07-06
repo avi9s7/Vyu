@@ -491,7 +491,7 @@ uv run pytest tests/deploy/test_deploy_smoke.py -q
 
 **Follow-ups:** Staging deploy/rollback/rotation exercise evidence remains operator-run before Plan 4 exit gate.
 
-### 2026-07-06 — Plan 4 Task 10: Backup and restore verification (commit pending)
+### 2026-07-06 — Plan 4 Task 10: Backup and restore verification (commit `b80900d2`)
 
 **Goal:** RDS PITR/S3 version recovery targets, `verify_restore.py` for restored database validation, and database restore runbook with RPO/RTO evidence.
 

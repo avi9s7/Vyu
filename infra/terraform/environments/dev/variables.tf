@@ -66,11 +66,6 @@ variable "compute_image_digests" {
   }
 }
 
-variable "compute_ecr_push_role_arns" {
-  type    = list(string)
-  default = []
-}
-
 variable "edge_primary_domain_name" {
   type = string
 }

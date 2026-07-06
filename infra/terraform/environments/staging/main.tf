@@ -1,7 +1,8 @@
 module "network" {
-  source      = "../../modules/network"
-  environment = var.environment
-  aws_region  = var.aws_region
+  source             = "../../modules/network"
+  environment        = var.environment
+  aws_region         = var.aws_region
+  single_nat_gateway = var.single_nat_gateway
 }
 
 module "kms" {

@@ -1,2 +1,13 @@
 environment = "prod"
 aws_region  = "ap-south-1"
+
+identity_callback_urls = [
+  "https://app.vyu.example/auth/callback",
+]
+
+identity_logout_urls = [
+  "https://app.vyu.example/logout",
+]
+
+identity_cognito_domain_prefix      = "vyu-prod-login-example"
+identity_resource_server_identifier = "https://api.vyu.example"

@@ -392,6 +392,20 @@ uv run pytest tests/infra -q
 uv run ruff check scripts/configure_secrets.py tests/infra/test_data_policy.py
 ```
 
+### 2026-07-06 — Plan 4 Task 4: Cognito authorization-code identity (commit pending)
+
+**Goal:** Composed Cognito user pool with authorization-code browser client, confidential machine client, API resource scopes, managed login domain, refresh-token rotation, and enterprise federation inputs.
+
+**Key paths:** `infra/terraform/modules/identity/*`, `deploy/aws/cognito/*` (compatibility wrapper), `tests/infra/test_identity_policy.py`
+
+**Verification:**
+
+```powershell
+terraform -chdir=infra/terraform/environments/dev init -backend=false
+terraform -chdir=infra/terraform/environments/dev validate
+uv run pytest tests/infra/test_identity_policy.py tests/test_aws_cognito_provisioning.py -q
+```
+
 ---
 
 

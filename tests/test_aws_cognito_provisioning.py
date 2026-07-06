@@ -15,23 +15,29 @@ from src.vyu.deployment import DeploymentOperatorConfig
 
 ROOT = Path(__file__).resolve().parents[1]
 COGNITO_DIR = ROOT / "deploy" / "aws" / "cognito"
+IDENTITY_MODULE = ROOT / "infra" / "terraform" / "modules" / "identity"
 
 
 class AwsCognitoProvisioningTests(unittest.TestCase):
     def test_terraform_stack_declares_cognito_identity_boundary(self):
-        main = (COGNITO_DIR / "main.tf").read_text(encoding="utf-8")
-        variables = (COGNITO_DIR / "variables.tf").read_text(encoding="utf-8")
-        outputs = (COGNITO_DIR / "outputs.tf").read_text(encoding="utf-8")
+        main = (IDENTITY_MODULE / "cognito.tf").read_text(encoding="utf-8")
+        machine = (IDENTITY_MODULE / "machine_client.tf").read_text(encoding="utf-8")
+        locals_tf = (IDENTITY_MODULE / "locals.tf").read_text(encoding="utf-8")
+        variables = (IDENTITY_MODULE / "variables.tf").read_text(encoding="utf-8")
+        outputs = (IDENTITY_MODULE / "outputs.tf").read_text(encoding="utf-8")
+        wrapper = (COGNITO_DIR / "main.tf").read_text(encoding="utf-8")
 
         self.assertIn('resource "aws_cognito_user_pool" "vyu"', main)
-        self.assertIn('resource "aws_cognito_user_pool_client" "vyu_app"', main)
+        self.assertIn('resource "aws_cognito_user_pool_client" "web"', main)
+        self.assertIn('resource "aws_cognito_user_pool_client" "machine"', machine)
         self.assertIn('resource "aws_cognito_resource_server" "vyu_api"', main)
         self.assertIn('resource "aws_cognito_user_group" "vyu_roles"', main)
         self.assertIn('resource "aws_cognito_identity_provider" "saml"', main)
         self.assertIn('resource "aws_cognito_identity_provider" "oidc"', main)
-        self.assertIn('"custom:vyu_tenant_id"', main)
-        self.assertIn('"custom:vyu_workspace_id"', main)
-        self.assertIn('"custom:vyu_roles"', main)
+        self.assertIn("vyu_tenant_id", locals_tf)
+        self.assertIn("vyu_workspace_id", locals_tf)
+        self.assertIn("vyu_roles", locals_tf)
+        self.assertIn('"custom:vyu_tenant_id"', locals_tf)
         self.assertIn('allowed_oauth_flows                  = ["code"]', main)
         self.assertIn('enable_token_revocation       = true', main)
         self.assertIn('prevent_user_existence_errors = "ENABLED"', main)
@@ -41,6 +47,7 @@ class AwsCognitoProvisioningTests(unittest.TestCase):
         self.assertIn('VYU_AUTH_MODE', outputs)
         self.assertIn('VYU_OIDC_JWKS_URI', outputs)
         self.assertIn('VYU_REQUIRE_TENANT_GOVERNANCE', outputs)
+        self.assertIn('module "identity"', wrapper)
 
     def test_renderer_converts_terraform_outputs_to_operator_env(self):
         env = render_operator_env(

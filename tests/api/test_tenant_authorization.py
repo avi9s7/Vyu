@@ -59,7 +59,8 @@ def test_inactive_membership_returns_403(postgres_urls: dict[str, str]) -> None:
             issuer=auth_settings.token_issuer,
             subject=subject,
             role="reviewer",
-        )
+        ),
+        email="inactive@example.com",
     )
     response = client.get(
         "/v1/debug/whoami",

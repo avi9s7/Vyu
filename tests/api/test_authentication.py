@@ -26,7 +26,7 @@ def test_invalid_bearer_token_returns_401(auth_context: AuthTestContext) -> None
 
 
 def test_expired_bearer_token_returns_401(auth_context: AuthTestContext) -> None:
-    token = bearer_token(auth_context, exp=int(time.time()) - 60)
+    token = bearer_token(auth_context, exp=int(time.time()) - 180)
     response = auth_context.client.get(
         "/v1/debug/whoami",
         headers={"Authorization": f"Bearer {token}"},

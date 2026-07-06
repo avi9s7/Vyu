@@ -7,8 +7,8 @@
 
 ## Test plan
 
-- [ ] CI backend job green (unit + PostgreSQL integration for db, jobs, api)
-- [ ] CI platform job builds API and worker images
-- [ ] `uv run python scripts/verify.py --scope backend` passes locally
-- [ ] OpenAPI artifact matches `/v1/research/searches` routes
-- [ ] Cross-tenant auth returns 404; duplicate idempotency key returns same IDs
+- [x] CI backend job green (unit + PostgreSQL integration for db, jobs, api) — [run 28771384956](https://github.com/avi9s7/Vyu/actions/runs/28771384956) @ `d7c819f8`
+- [x] CI platform job builds API and worker images
+- [x] `uv run python scripts/verify.py --scope backend` passes locally
+- [x] OpenAPI artifact matches `/v1/research/searches` routes
+- [x] Cross-tenant auth returns 404; duplicate idempotency key returns same IDs

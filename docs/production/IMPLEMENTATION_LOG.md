@@ -327,6 +327,8 @@ uv run python scripts/verify.py --scope backend
 
 **CI:** [run 28770959996](https://github.com/avi9s7/Vyu/actions/runs/28770959996) @ `dd674d2a` — backend, frontend, platform success.
 
+**PR:** [#3](https://github.com/avi9s7/Vyu/pull/3) — CI [run 28771384956](https://github.com/avi9s7/Vyu/actions/runs/28771384956) @ `d7c819f8` success (awaiting merge to `main`).
+
 ### 2026-07-06 — CI fixes: API tests + Docker digest (commits `37f14d43`, `871dc6f8`, `dd674d2a`)
 
 - API integration: tenancy seed isolation, JWT `exp` beyond 60s leeway, inactive-user email alignment.

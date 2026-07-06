@@ -15,6 +15,7 @@ from src.vyu.api.exceptions import ApiError
 from src.vyu.api.middleware import RequestContextMiddleware
 from src.vyu.api.routers.auth_debug import create_auth_debug_router
 from src.vyu.api.routers.health import create_health_router, create_version_router
+from src.vyu.api.routers.me import create_me_router
 from src.vyu.api.routers.research import create_research_router
 from src.vyu.api.settings import ApiSettings
 from src.vyu.auth.settings import AuthSettings
@@ -139,6 +140,7 @@ def create_app(
     v1.include_router(
         create_version_router(settings=api_settings, schema_revision=schema_revision)
     )
+    v1.include_router(create_me_router())
     v1.include_router(create_auth_debug_router())
     v1.include_router(create_research_router())
 

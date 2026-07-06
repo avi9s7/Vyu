@@ -519,6 +519,16 @@ uv run pytest tests/integration/db/test_verify_restore.py -q
 
 Stacked on Task 1 ([#4](https://github.com/avi9s7/Vyu/pull/4)). CI fixes pushed for ruff, terraform fmt, setup-terraform action pin, and RDS policy assertions.
 
+### 2026-07-06 — Plan 4 merged to `main` ([#4](https://github.com/avi9s7/Vyu/pull/4), [#6](https://github.com/avi9s7/Vyu/pull/6))
+
+Task 1 landed via PR #4. Tasks 2–10 rebased onto `main` and merged via PR #6 after PR #5 closed.
+
+### 2026-07-06 — Plan 4 placeholder CI bootstrap (commit `82ef052d`)
+
+Pilot GitHub environments (`dev`, `staging`, `prod`) and placeholder variables seeded. Local `backend.hcl` / `terraform.tfvars` materialized via `scripts/bootstrap_aws_placeholders.ps1`. Terraform outputs and `scripts/render_github_ci_vars.py` added for post-apply wiring.
+
+**Follow-ups:** Replace placeholder ARNs/hostnames after real `terraform apply`.
+
 ---
 
 

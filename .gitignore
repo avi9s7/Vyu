@@ -51,6 +51,7 @@ override.tf.json
 *_override.tf.json
 infra/terraform/environments/*/backend.hcl
 infra/terraform/environments/*/terraform.tfvars
+infra/terraform/bootstrap/terraform.tfvars
 
 # Local upstream/reference archives
 upstreams/

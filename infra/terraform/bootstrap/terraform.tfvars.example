@@ -1,0 +1,3 @@
+aws_region        = "ap-south-1"
+state_bucket_name = "vyu-terraform-state-example"
+lock_table_name   = "vyu-terraform-state-lock"

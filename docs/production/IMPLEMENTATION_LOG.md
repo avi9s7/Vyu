@@ -448,7 +448,7 @@ terraform -chdir=infra/terraform/environments/dev validate
 uv run pytest tests/infra/test_observability_policy.py tests/observability -q
 ```
 
-### 2026-07-06 — Plan 4 Task 8: GitHub OIDC and deployment CI (commit `2f11ddd4`)
+### 2026-07-06 — Plan 4 Task 8: GitHub OIDC and deployment CI (commit `2274ef26`)
 
 **Goal:** Least-privilege GitHub Actions OIDC roles for Terraform plan/apply and ECR image push; PR plan workflow and protected-environment deploy workflow with migration gating and smoke rollback.
 

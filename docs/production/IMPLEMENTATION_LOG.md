@@ -515,6 +515,10 @@ uv run pytest tests/integration/db/test_verify_restore.py -q
 
 **Follow-ups:** Live staging RDS/S3 restore drill and measured RPO/RTO evidence remain operator-run before Plan 4 exit gate.
 
+### 2026-07-06 — Plan 4 Tasks 2–10 PR opened ([#5](https://github.com/avi9s7/Vyu/pull/5))
+
+Stacked on Task 1 ([#4](https://github.com/avi9s7/Vyu/pull/4)). CI fixes pushed for ruff, terraform fmt, setup-terraform action pin, and RDS policy assertions.
+
 ---
 
 

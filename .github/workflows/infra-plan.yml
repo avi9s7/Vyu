@@ -55,6 +55,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     needs: policy
+    if: ${{ vars.AWS_PLAN_ROLE_ARN != '' }}
     permissions:
       contents: read
       id-token: write
@@ -66,7 +67,7 @@ jobs:
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@61815dcd50bd0416a1b5ad9e1db6fcd8c6a6c8e4 # v5.1.0
+        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # v5.1.0
         with:
           role-to-assume: ${{ vars.AWS_PLAN_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}

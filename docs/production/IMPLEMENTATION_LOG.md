@@ -347,7 +347,7 @@ uv run python scripts/verify.py --scope backend
 
 Plan 3 exit gate satisfied after squash merge to `main`.
 
-### 2026-07-06 — Plan 4 Task 1: Terraform environment structure (commit pending)
+### 2026-07-06 — Plan 4 Task 1: Terraform environment structure (commit `d64af85f`)
 
 **Goal:** Establish Terraform module layout, remote-state policy, and structure tests.
 

@@ -14,6 +14,10 @@ output "bucket_names" {
   value = { for key, bucket in aws_s3_bucket.application : key => bucket.bucket }
 }
 
+output "access_logs_bucket_domain_name" {
+  value = aws_s3_bucket.access_logs.bucket_regional_domain_name
+}
+
 output "secret_arns" {
   value = { for key, secret in aws_secretsmanager_secret.this : key => secret.arn }
 }

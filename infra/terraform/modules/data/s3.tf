@@ -178,7 +178,7 @@ data "aws_iam_policy_document" "tls_only" {
 }
 
 resource "aws_s3_bucket_policy" "application" {
-  for_each = aws_s3_bucket.application
+  for_each = { for key, bucket in aws_s3_bucket.application : key => bucket if key != "evidence" }
 
   bucket = each.value.id
   policy = data.aws_iam_policy_document.tls_only[each.key].json

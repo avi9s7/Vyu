@@ -11,3 +11,6 @@ identity_logout_urls = [
 
 identity_cognito_domain_prefix      = "vyu-staging-login-example"
 identity_resource_server_identifier = "https://api.staging.vyu.example"
+
+edge_primary_domain_name = "staging.app.vyu.example"
+edge_route53_zone_id     = "Z000000000000000000000"

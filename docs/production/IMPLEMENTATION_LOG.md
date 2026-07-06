@@ -420,6 +420,20 @@ terraform -chdir=infra/terraform/environments/dev validate
 uv run pytest tests/infra -q
 ```
 
+### 2026-07-06 — Plan 4 Task 6: CloudFront, WAF, TLS, DNS (commit pending)
+
+**Goal:** Route 53 + ACM validation, CloudFront with WAF and security headers, S3 OAC for evidence origin, ALB HTTPS listeners, and API/upload body-size limits at the edge.
+
+**Key paths:** `infra/terraform/modules/edge/*`, `tests/infra/test_edge_policy.py`
+
+**Verification:**
+
+```powershell
+terraform -chdir=infra/terraform/environments/dev init -backend=false
+terraform -chdir=infra/terraform/environments/dev validate
+uv run pytest tests/infra/test_edge_policy.py -q
+```
+
 ---
 
 

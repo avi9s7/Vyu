@@ -45,12 +45,6 @@ module "identity" {
   oidc_identity_providers      = var.identity_oidc_identity_providers
 }
 
-module "edge" {
-  source      = "../../modules/edge"
-  environment = var.environment
-  aws_region  = var.aws_region
-}
-
 module "compute" {
   source = "../../modules/compute"
 
@@ -70,7 +64,24 @@ module "compute" {
   queue_urls                      = module.queues.queue_urls
   image_digests                   = var.compute_image_digests
   ecr_push_role_arns              = var.compute_ecr_push_role_arns
-  alb_certificate_arn             = var.compute_alb_certificate_arn
+}
+
+module "edge" {
+  source = "../../modules/edge"
+
+  providers = {
+    aws.us_east_1 = aws.us_east_1
+  }
+
+  environment                    = var.environment
+  aws_region                     = var.aws_region
+  primary_domain_name            = var.edge_primary_domain_name
+  route53_zone_id                = var.edge_route53_zone_id
+  alb_arn                        = module.compute.alb_arn
+  alb_dns_name                   = module.compute.alb_dns_name
+  target_group_arns              = module.compute.target_group_arns
+  evidence_bucket_name           = module.data.bucket_names["evidence"]
+  access_logs_bucket_domain_name = module.data.access_logs_bucket_domain_name
 }
 
 module "observability" {

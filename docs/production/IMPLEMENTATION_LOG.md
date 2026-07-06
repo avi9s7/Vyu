@@ -376,7 +376,7 @@ terraform -chdir=infra/terraform/environments/dev validate
 uv run pytest tests/infra -q
 ```
 
-### 2026-07-06 — Plan 4 Task 3: RDS, S3, SQS, and Secrets (commit pending)
+### 2026-07-06 — Plan 4 Task 3: RDS, S3, SQS, and Secrets (commit `4533a477`)
 
 **Goal:** Encrypted data plane (RDS PostgreSQL 17, versioned S3 buckets, SQS workloads with DLQs), Secrets Manager containers (no versions in Terraform), and operator secret CLI.
 

@@ -14,6 +14,14 @@ output "database_instance_identifier" {
   value = aws_db_instance.postgres.id
 }
 
+output "database_backup_retention_days" {
+  value = aws_db_instance.postgres.backup_retention_period
+}
+
+output "pilot_recovery_targets" {
+  value = local.pilot_recovery_targets
+}
+
 output "bucket_names" {
   value = { for key, bucket in aws_s3_bucket.application : key => bucket.bucket }
 }

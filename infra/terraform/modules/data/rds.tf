@@ -56,6 +56,7 @@ resource "aws_db_instance" "postgres" {
 
   backup_retention_period   = local.is_production ? 35 : 7
   backup_window           = "19:00-20:00"
+  copy_tags_to_snapshot   = true
   maintenance_window      = "sun:20:00-sun:21:00"
   deletion_protection     = local.is_production
   skip_final_snapshot     = !local.is_production

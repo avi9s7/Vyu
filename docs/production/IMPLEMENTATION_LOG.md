@@ -491,6 +491,30 @@ uv run pytest tests/deploy/test_deploy_smoke.py -q
 
 **Follow-ups:** Staging deploy/rollback/rotation exercise evidence remains operator-run before Plan 4 exit gate.
 
+### 2026-07-06 — Plan 4 Task 10: Backup and restore verification (commit pending)
+
+**Goal:** RDS PITR/S3 version recovery targets, `verify_restore.py` for restored database validation, and database restore runbook with RPO/RTO evidence.
+
+**Key paths:** `scripts/verify_restore.py`, `docs/production/runbooks/database-restore.md`, `infra/terraform/modules/data/*`, `tests/infra/test_restore_policy.py`, `tests/integration/db/test_verify_restore.py`
+
+**Changes:**
+
+- Declared pilot recovery targets (RPO <= 15 minutes, RTO <= 4 hours) in data module locals/outputs.
+- Enabled `copy_tags_to_snapshot` on RDS; S3 versioning/lifecycle already present for application buckets.
+- `verify_restore.py`: migration revision, fixture hashes, tenant isolation, audit presence, post-restore absence checks, and optional S3 version/database reference verification.
+- `database-restore.md`: staging PITR drill, isolated verification task, manifest format, evidence template, cleanup.
+
+**Verification:**
+
+```powershell
+terraform -chdir=infra/terraform/environments/dev init -backend=false
+terraform -chdir=infra/terraform/environments/dev validate
+uv run pytest tests/infra/test_restore_policy.py -q
+uv run pytest tests/integration/db/test_verify_restore.py -q
+```
+
+**Follow-ups:** Live staging RDS/S3 restore drill and measured RPO/RTO evidence remain operator-run before Plan 4 exit gate.
+
 ---
 
 

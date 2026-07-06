@@ -362,9 +362,22 @@ terraform -chdir=infra/terraform/environments/dev validate
 uv run pytest tests/infra/test_terraform_structure.py -q
 ```
 
+### 2026-07-06 — Plan 4 Task 2: Network and KMS foundations (commit pending)
+
+**Goal:** Private VPC across three AZs, VPC endpoints, least-privilege security groups, and customer-managed KMS keys.
+
+**Key paths:** `infra/terraform/modules/{network,kms}/*`, `tests/infra/test_network_policy.py`
+
+**Verification:**
+
+```powershell
+terraform -chdir=infra/terraform/environments/dev init -backend=false
+terraform -chdir=infra/terraform/environments/dev validate
+uv run pytest tests/infra -q
+```
+
 ---
 
-## Quick reference — verification scopes
 
 | Scope | Command | Requires |
 | --- | --- | --- |

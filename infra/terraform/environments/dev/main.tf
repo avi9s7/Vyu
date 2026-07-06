@@ -48,8 +48,8 @@ module "identity" {
 module "github_oidc" {
   source = "../../modules/github_oidc"
 
-  environment      = var.environment
-  aws_region       = var.aws_region
+  environment = var.environment
+  aws_region  = var.aws_region
   ecr_repository_names = [
     "vyu-${var.environment}-web",
     "vyu-${var.environment}-api",

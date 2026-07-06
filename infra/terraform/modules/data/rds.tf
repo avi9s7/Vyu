@@ -37,7 +37,7 @@ resource "aws_db_instance" "postgres" {
 
   db_subnet_group_name   = aws_db_subnet_group.this.name
   vpc_security_group_ids = [var.database_security_group_id]
-  parameter_group_name     = aws_db_parameter_group.postgres.name
+  parameter_group_name   = aws_db_parameter_group.postgres.name
 
   allocated_storage     = local.is_production ? 100 : 20
   max_allocated_storage = local.is_production ? 500 : 100
@@ -51,15 +51,15 @@ resource "aws_db_instance" "postgres" {
   db_name  = "vyu"
   username = "vyu_admin"
 
-  manage_master_user_password = true
+  manage_master_user_password   = true
   master_user_secret_kms_key_id = var.secrets_kms_key_arn
 
   backup_retention_period   = local.is_production ? 35 : 7
-  backup_window           = "19:00-20:00"
-  copy_tags_to_snapshot   = true
-  maintenance_window      = "sun:20:00-sun:21:00"
-  deletion_protection     = local.is_production
-  skip_final_snapshot     = !local.is_production
+  backup_window             = "19:00-20:00"
+  copy_tags_to_snapshot     = true
+  maintenance_window        = "sun:20:00-sun:21:00"
+  deletion_protection       = local.is_production
+  skip_final_snapshot       = !local.is_production
   final_snapshot_identifier = local.is_production ? "vyu-${var.environment}-postgres-final" : null
 
   enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]

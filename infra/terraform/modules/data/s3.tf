@@ -148,8 +148,8 @@ resource "aws_s3_bucket_object_lock_configuration" "audit" {
 
   rule {
     default_retention {
-      mode  = local.is_production ? "COMPLIANCE" : "GOVERNANCE"
-      days  = local.is_production ? 365 : 30
+      mode = local.is_production ? "COMPLIANCE" : "GOVERNANCE"
+      days = local.is_production ? 365 : 30
     }
   }
 }

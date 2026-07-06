@@ -1,6 +1,6 @@
 locals {
-  alarm_actions_standard  = [aws_sns_topic.alarms.arn]
-  alarm_actions_critical  = [aws_sns_topic.critical.arn]
+  alarm_actions_standard = [aws_sns_topic.alarms.arn]
+  alarm_actions_critical = [aws_sns_topic.critical.arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "queue_depth" {

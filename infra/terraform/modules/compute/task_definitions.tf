@@ -50,10 +50,10 @@ resource "aws_ecs_task_definition" "web" {
 
   container_definitions = jsonencode([
     {
-      name      = "web"
-      image     = "${local.image_repositories.web}@${var.image_digests.web}"
-      essential = true
-      user      = local.task_container_defaults.user
+      name                   = "web"
+      image                  = "${local.image_repositories.web}@${var.image_digests.web}"
+      essential              = true
+      user                   = local.task_container_defaults.user
       readonlyRootFilesystem = local.task_container_defaults.readonly_root_filesystem
       portMappings = [
         {
@@ -68,7 +68,7 @@ resource "aws_ecs_task_definition" "web" {
         { name = "PORT", value = tostring(var.web_container_port) },
         { name = "HOSTNAME", value = "0.0.0.0" },
       ]
-      mountPoints    = local.task_container_defaults.mount_points
+      mountPoints     = local.task_container_defaults.mount_points
       linuxParameters = local.task_container_defaults.linux_parameters
       healthCheck = {
         command     = ["CMD-SHELL", "curl -fsS http://127.0.0.1:${var.web_container_port}/api/health || exit 1"]
@@ -111,10 +111,10 @@ resource "aws_ecs_task_definition" "api" {
 
   container_definitions = jsonencode([
     {
-      name      = "api"
-      image     = "${local.image_repositories.api}@${var.image_digests.api}"
-      essential = true
-      user      = local.task_container_defaults.user
+      name                   = "api"
+      image                  = "${local.image_repositories.api}@${var.image_digests.api}"
+      essential              = true
+      user                   = local.task_container_defaults.user
       readonlyRootFilesystem = local.task_container_defaults.readonly_root_filesystem
       portMappings = [
         {
@@ -175,10 +175,10 @@ resource "aws_ecs_task_definition" "worker" {
 
   container_definitions = jsonencode([
     {
-      name      = "worker"
-      image     = "${local.image_repositories.worker}@${var.image_digests.worker}"
-      essential = true
-      user      = local.task_container_defaults.user
+      name                   = "worker"
+      image                  = "${local.image_repositories.worker}@${var.image_digests.worker}"
+      essential              = true
+      user                   = local.task_container_defaults.user
       readonlyRootFilesystem = local.task_container_defaults.readonly_root_filesystem
       environment = [
         { name = "VYU_ENV", value = var.environment },
@@ -223,12 +223,12 @@ resource "aws_ecs_task_definition" "migration" {
 
   container_definitions = jsonencode([
     {
-      name      = "migration"
-      image     = "${local.image_repositories.migration}@${var.image_digests.api}"
-      essential = true
-      user      = local.task_container_defaults.user
+      name                   = "migration"
+      image                  = "${local.image_repositories.migration}@${var.image_digests.api}"
+      essential              = true
+      user                   = local.task_container_defaults.user
       readonlyRootFilesystem = local.task_container_defaults.readonly_root_filesystem
-      command   = ["uv", "run", "alembic", "upgrade", "head"]
+      command                = ["uv", "run", "alembic", "upgrade", "head"]
       environment = [
         { name = "VYU_ENV", value = var.environment },
       ]

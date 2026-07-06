@@ -2,7 +2,7 @@ resource "aws_vpc_endpoint" "s3" {
   vpc_id            = aws_vpc.this.id
   service_name      = "com.amazonaws.${var.aws_region}.s3"
   vpc_endpoint_type = "Gateway"
-  route_table_ids   = concat(
+  route_table_ids = concat(
     [aws_route_table.public.id],
     [for table in aws_route_table.private : table.id],
     [aws_route_table.database.id],

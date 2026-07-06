@@ -1,9 +1,9 @@
 locals {
-  is_production = var.environment == "prod"
-  name_prefix   = "vyu-${var.environment}"
+  is_production    = var.environment == "prod"
+  name_prefix      = "vyu-${var.environment}"
   metric_namespace = "VYU/${var.environment}"
 
-  ecs_services = ["web", "api", "worker"]
+  ecs_services           = ["web", "api", "worker"]
   application_log_groups = var.service_log_group_names
 
   dashboard_widgets = [

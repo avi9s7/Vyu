@@ -140,7 +140,6 @@ def test_deploy_workflow_runs_migration_before_apply_and_records_rollback() -> N
     content = _read_workflow(DEPLOY_WORKFLOW)
     apply_job = _workflow_job(content, "apply")
     migrate_job = _workflow_job(content, "migrate")
-    build_job = _workflow_job(content, "build-images")
     smoke_job = _workflow_job(content, "smoke")
     rollback_job = _workflow_job(content, "rollback")
 

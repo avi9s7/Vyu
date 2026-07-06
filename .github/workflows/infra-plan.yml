@@ -32,6 +32,11 @@ jobs:
       - name: Install locked dependencies
         run: uv sync --all-groups --frozen
 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@b9cd54cb3ab93c00572ce885b6ec89afcd7d9e4f # v3.1.2
+        with:
+          terraform_version: 1.9.8
+
       - name: Terraform fmt check
         run: terraform -chdir=infra/terraform/environments/dev fmt -check -recursive
 

@@ -87,20 +87,20 @@ def get_request_principal(
             code="authentication_failed",
             message=str(exc),
         ) from exc
-    with session_factory.begin() as session:
-        try:
+    try:
+        with session_factory.begin() as session:
             return resolver.resolve(
                 verified,
                 session,
                 request_id=request.state.request_id,
                 trace_id=request.state.trace_id,
             )
-        except AuthorizationError as exc:
-            raise ApiError(
-                status_code=403,
-                code="authorization_failed",
-                message=str(exc),
-            ) from exc
+    except AuthorizationError as exc:
+        raise ApiError(
+            status_code=403,
+            code="authorization_failed",
+            message=str(exc),
+        ) from exc
 
 
 def get_db_session(

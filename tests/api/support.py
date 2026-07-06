@@ -86,21 +86,21 @@ def seed_active_membership(
 ) -> tuple[UUID, UUID, UUID]:
     tenant_id = tenant_id or uuid4()
     workspace_id = workspace_id or uuid4()
-    user_id = user_id or uuid4()
     scope = TenantScope(tenant_id=tenant_id, workspace_id=workspace_id)
 
     with factory.begin() as session:
         repo = TenancyRepository(session)
         repo.add_tenant(NewTenant(id=tenant_id, slug=f"tenant-{tenant_id.hex[:8]}", name="Test Tenant"))
-        repo.upsert_user(
+        user = repo.upsert_user(
             IdentityUser(
-                id=user_id,
+                id=user_id or uuid4(),
                 issuer=issuer,
                 subject=subject,
                 email="user@example.com",
                 email_verified=True,
             )
         )
+        user_id = user.id
     with transaction(factory, scope=scope) as session:
         repo = TenancyRepository(session)
         repo.add_workspace(
@@ -127,8 +127,9 @@ def build_auth_test_client(
     postgres_urls: Mapping[str, str],
     *,
     role: str = "reviewer",
-    subject: str = "user-test-1",
+    subject: str | None = None,
 ) -> AuthTestContext:
+    resolved_subject = subject or f"user-{uuid4()}"
     auth_settings = AuthSettings(
         env="test",
         auth_mode="local_hs256",
@@ -143,7 +144,7 @@ def build_auth_test_client(
     tenant_id, workspace_id, user_id = seed_active_membership(
         migration_factory,
         issuer=auth_settings.token_issuer,
-        subject=subject,
+        subject=resolved_subject,
         role=role,
     )
     app = create_app(
@@ -160,7 +161,7 @@ def build_auth_test_client(
         workspace_id=workspace_id,
         user_id=user_id,
         issuer=auth_settings.token_issuer,
-        subject=subject,
+        subject=resolved_subject,
         role=role,
     )
 

@@ -31,7 +31,7 @@ def test_inactive_membership_returns_403(postgres_urls: dict[str, str]) -> None:
 
     with migration_factory.begin() as session:
         repo = TenancyRepository(session)
-        repo.upsert_user(
+        user = repo.upsert_user(
             IdentityUser(
                 id=uuid4(),
                 issuer=auth_settings.token_issuer,
@@ -40,6 +40,7 @@ def test_inactive_membership_returns_403(postgres_urls: dict[str, str]) -> None:
                 email_verified=True,
             )
         )
+        user_id = user.id
 
     app = create_app(
         settings_override=ApiSettings(env="test", expected_migration_revision="0003"),
@@ -54,7 +55,7 @@ def test_inactive_membership_returns_403(postgres_urls: dict[str, str]) -> None:
             auth_settings=auth_settings,
             tenant_id=tenant_id,
             workspace_id=workspace_id,
-            user_id=uuid4(),
+            user_id=user_id,
             issuer=auth_settings.token_issuer,
             subject=subject,
             role="reviewer",

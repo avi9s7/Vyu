@@ -301,23 +301,31 @@ uv run python scripts/export_openapi.py --output docs/api/openapi.json
 - Long-poll consumer with lease acquisition, handler dispatch, heartbeat, retry backoff, and message ack/nack semantics.
 - Duplicate terminal jobs ack without rerunning handlers; signal handlers for graceful stop.
 
-### 2026-07-05 — Task 9: Containers, compose, CI (commit `d965b794`, CI fix `pending`)
+### 2026-07-05 — Task 9: Containers, compose, CI (commit `d965b794`)
 
-**Branch pushed:** `cursor/fastapi-jobs-plan-3` @ `d965b794` (+ CI fix commit)
+**Key paths:** `deploy/docker/{api,worker}.Dockerfile`, `compose.yaml`, `.github/workflows/ci.yml`
+
+### 2026-07-06 — CI fix: API integration test isolation (commit pending)
+
+**CI failure:** Run [28754209285](https://github.com/avi9s7/Vyu/actions/runs/28754209285) — backend PostgreSQL step failed on API tests (`DuplicateRecordError` / FK `fk_memberships_user_id_users`).
+
+**Root cause:** `seed_active_membership` reused the same default subject (`user-test-1`) across session-scoped fixtures while `upsert_user` returned an existing user id that did not match the freshly generated `user_id` passed to `add_membership`.
+
+**Fixes:**
+
+| Path | Change |
+| --- | --- |
+| `tests/api/support.py` | Use `upsert_user` return id for membership; unique subject per `build_auth_test_client` |
+| `tests/api/test_tenant_authorization.py` | Bind inactive-user test to upserted user id |
+| `src/vyu/api/dependencies.py` | Handle `AuthorizationError` outside the DB transaction block |
+
+**Verification:**
+
+```powershell
+uv run python scripts/verify.py --scope backend
+```
 
 **Open PR:** https://github.com/avi9s7/Vyu/compare/main...cursor/fastapi-jobs-plan-3
-
-### Planned scope (from spec — not yet implemented)
-
-- FastAPI application shell, `/v1` routes, Pydantic models
-- OpenAPI artifact and contract tests
-- Authentication wired to existing identity/tenant boundaries
-- Job platform: migration `0003`, outbox, SQS worker, idempotency
-- Compose services for API/worker; CI image build and smoke path
-
-### Implementation log entries
-
-*(Add dated subsections here as Plan 3 tasks land — one subsection per merged PR or task exit gate.)*
 
 ---
 

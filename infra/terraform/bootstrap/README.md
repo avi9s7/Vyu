@@ -18,3 +18,18 @@ that are never committed with production identifiers.
 
 Copy `environments/<env>/backend.hcl.example` to a local, untracked `backend.hcl`
 and substitute approved values before `terraform init`.
+
+Pilot placeholders (replace before any real apply):
+
+```powershell
+powershell -File scripts/bootstrap_aws_placeholders.ps1
+powershell -File scripts/setup_github_ci_placeholders.ps1
+```
+
+After a successful `terraform apply`, regenerate real GitHub variable commands with:
+
+```powershell
+uv run python scripts/render_github_ci_vars.py dev
+```
+
+See `placeholders.env.example` for the documented dummy account, state bucket, and hostname values.

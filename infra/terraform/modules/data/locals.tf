@@ -15,4 +15,9 @@ locals {
     database_connection = "vyu/${var.environment}/database/connection"
     providers           = "vyu/${var.environment}/providers"
   }
+
+  pilot_recovery_targets = {
+    rpo_minutes = 15
+    rto_hours   = 4
+  }
 }

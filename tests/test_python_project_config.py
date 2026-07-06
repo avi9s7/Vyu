@@ -34,6 +34,18 @@ class PythonProjectConfigTests(unittest.TestCase):
     def test_lock_file_exists(self) -> None:
         self.assertTrue((ROOT / "uv.lock").is_file())
 
+    def test_api_and_queue_dependencies_are_declared(self) -> None:
+        dependencies = "\n".join(self.config["project"]["dependencies"])
+        for required in (
+            "boto3",
+            "cryptography",
+            "fastapi",
+            "httpx",
+            "pyjwt",
+            "uvicorn",
+        ):
+            self.assertIn(required, dependencies)
+
 
 if __name__ == "__main__":
     unittest.main()

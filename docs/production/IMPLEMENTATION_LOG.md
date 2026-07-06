@@ -196,22 +196,145 @@ Included: schema/RLS/repositories, CI postgres service, integration test fixes (
 
 ## Plan 3 — FastAPI application and job platform
 
-**Status:** not started  
-**Owner:** unassigned  
+**Status:** in_progress  
+**Owner:** avi9s7  
+**Branch:** `cursor/fastapi-jobs-plan-3`  
 **Entry gate:** Plan 2 complete (`ff3b90e6` / Alembic `0002`)  
-**Plan spec:** `docs/superpowers/plans/2026-07-05-vyu-plan-03-fastapi-jobs.md`
+**Plan spec:** `docs/superpowers/plans/2026-07-05-vyu-plan-03-fastapi-jobs.md`  
+**Current Alembic head:** `0003`
 
-### Planned scope (from spec — not yet implemented)
+### 2026-07-05 — Tasks 1–4 (commits `4dc25668` … `57f5563e`)
 
-- FastAPI application shell, `/v1` routes, Pydantic models
-- OpenAPI artifact and contract tests
-- Authentication wired to existing identity/tenant boundaries
-- Job platform: migration `0003`, outbox, SQS worker, idempotency
-- Compose services for API/worker; CI image build and smoke path
+**Goal:** Dependencies, job/research schema, idempotent job repository, and FastAPI shell with stable error contract.
 
-### Implementation log entries
+| Task | Commit message | Key paths |
+| --- | --- | --- |
+| 1 | `build: add API and queue dependencies` | `pyproject.toml`, `uv.lock`, FastAPI/boto3/PyJWT/uvicorn/httpx |
+| 2 | `feat: add durable job and research schema` | `0003_jobs_research.py`, `src/vyu/jobs/models.py`, integration migration tests |
+| 3 | `feat: add idempotent job state machine` | `src/vyu/jobs/contracts.py`, `repository.py`, lease/idempotency integration tests |
+| 4 | `feat: add FastAPI app and stable error contract` | `src/vyu/api/*`, `apps/api/main.py`, `tests/api/*` |
 
-*(Add dated subsections here as Plan 3 tasks land — one subsection per merged PR or task exit gate.)*
+**Schema `0003` tables:** `jobs`, `idempotency_keys`, `outbox_events`, `research_runs`, `research_run_events` — all with FORCE RLS (tenant-only for idempotency keys; tenant+workspace for the rest).
+
+**Verification (local):**
+
+```powershell
+uv run python -m unittest discover -q
+uv run pytest tests/api -q
+uv run ruff check src/vyu/api src/vyu/jobs
+uv run mypy
+```
+
+**Decisions:**
+
+- Shared PostgreSQL fixture moved to `tests/integration/conftest.py` for db + jobs integration tests.
+- Job repository uses nested savepoints pattern inherited from Plan 2 for idempotency key conflicts.
+- `create_app()` verifies Alembic revision at startup; tests override with in-memory SQLite engine + `schema_revision_override="0003"`.
+- Stable error envelope on all `/v1` routes; request/trace IDs via middleware.
+
+**Remaining (Tasks 5–9):** research API + OpenAPI, SQS outbox publisher, worker runtime, Docker/compose/CI.
+
+### 2026-07-05 — Task 5: OIDC identity and PostgreSQL membership
+
+**Goal:** Bind verified bearer tokens to database membership; expose FastAPI dependencies and protected debug routes for contract tests.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| Auth layer | `src/vyu/auth/{tokens,settings,principal,resolver}.py` |
+| API wiring | `src/vyu/api/{dependencies,exceptions}.py`, `routers/auth_debug.py`, `app.py` |
+| IdP | `src/vyu/deployment/idp.py` — `require_email_verified` on `OidcJwksConfig` |
+| Tests | `tests/api/{support,conftest,test_authentication,test_tenant_authorization}.py` |
+
+**Behavior:**
+
+- `TokenVerifier` protocol wraps existing HS256 and OIDC JWKS authenticators; claim validation stays framework-free.
+- `PrincipalResolver` upserts external identity, loads active exact-scope membership, uses stored role (ignores claimed admin), sets `app.tenant_id` / `app.workspace_id` before audit append, and records allow/deny identity audit events.
+- Protected routes use `get_request_principal`; `/v1/health/live` stays public.
+- `VYU_AUTH_MODE=local_hs256` allowed only in local/test; rejected in staging/production.
+
+**Verification:**
+
+```powershell
+uv run pytest tests/api/test_authentication.py tests/api/test_tenant_authorization.py tests/api/test_health.py -q
+uv run mypy src/vyu/api src/vyu/auth
+```
+
+*(PostgreSQL required for auth integration tests — Docker testcontainers locally or CI env vars.)*
+
+### 2026-07-05 — Task 6: Asynchronous research API (commit pending)
+
+**Goal:** Authenticated research search submission with idempotency, scoped reads, cancellation, events, and exported OpenAPI.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| Schemas | `src/vyu/api/schemas/research.py` |
+| Router | `src/vyu/api/routers/research.py` |
+| Service | `src/vyu/research/{settings,service}.py` |
+| OpenAPI | `scripts/export_openapi.py`, `docs/api/openapi.json` |
+| Tests | `tests/api/test_research_routes.py` |
+
+**Routes:**
+
+- `POST /v1/research/searches` — requires `Idempotency-Key`; atomically creates research run, job, outbox event, audit event, and initial run event; returns `202`.
+- `GET /v1/research/searches` — cursor-paginated list (tenant/workspace scoped via RLS).
+- `GET /v1/research/searches/{search_id}` — detail with links.
+- `GET /v1/research/searches/{search_id}/events` — ordered event stream.
+- `POST /v1/research/searches/{search_id}/cancel` — sets `cancel_requested`, cancels queued job, appends event (history preserved).
+
+**Verification:**
+
+```powershell
+uv run pytest tests/api/test_research_routes.py -q
+uv run python scripts/export_openapi.py --output docs/api/openapi.json
+```
+
+**Remaining (Tasks 8–9):** Docker/compose/CI evidence for Plan 3 exit gate.
+
+### 2026-07-05 — Task 8: Idempotent SQS worker (commit `29620271`)
+
+**Key paths:** `src/vyu/jobs/worker.py`, `apps/worker/main.py`, `tests/integration/jobs/test_worker.py`
+
+- Long-poll consumer with lease acquisition, handler dispatch, heartbeat, retry backoff, and message ack/nack semantics.
+- Duplicate terminal jobs ack without rerunning handlers; signal handlers for graceful stop.
+
+### 2026-07-05 — Task 9: Containers, compose, CI (commit `d965b794`)
+
+**Key paths:** `deploy/docker/{api,worker}.Dockerfile`, `compose.yaml`, `.github/workflows/ci.yml`
+
+### 2026-07-06 — CI fix: API integration test isolation (commit pending)
+
+**CI failure:** Run [28754209285](https://github.com/avi9s7/Vyu/actions/runs/28754209285) — backend PostgreSQL step failed on API tests (`DuplicateRecordError` / FK `fk_memberships_user_id_users`).
+
+**Root cause:** `seed_active_membership` reused the same default subject (`user-test-1`) across session-scoped fixtures while `upsert_user` returned an existing user id that did not match the freshly generated `user_id` passed to `add_membership`.
+
+**Fixes:**
+
+| Path | Change |
+| --- | --- |
+| `tests/api/support.py` | Use `upsert_user` return id for membership; unique subject per `build_auth_test_client` |
+| `tests/api/test_tenant_authorization.py` | Bind inactive-user test to upserted user id |
+| `src/vyu/api/dependencies.py` | Handle `AuthorizationError` outside the DB transaction block |
+
+**Verification:**
+
+```powershell
+uv run python scripts/verify.py --scope backend
+```
+
+**CI:** [run 28770959996](https://github.com/avi9s7/Vyu/actions/runs/28770959996) @ `dd674d2a` — backend, frontend, platform success.
+
+**PR:** [#3](https://github.com/avi9s7/Vyu/pull/3) — CI [run 28771384956](https://github.com/avi9s7/Vyu/actions/runs/28771384956) @ `d7c819f8` success (awaiting merge to `main`).
+
+### 2026-07-06 — CI fixes: API tests + Docker digest (commits `37f14d43`, `871dc6f8`, `dd674d2a`)
+
+- API integration: tenancy seed isolation, JWT `exp` beyond 60s leeway, inactive-user email alignment.
+- Platform: corrected truncated `python:3.13-slim-bookworm` digest in `deploy/docker/{api,worker}.Dockerfile`.
+
+**Open PR:** https://github.com/avi9s7/Vyu/compare/main...cursor/fastapi-jobs-plan-3
 
 ---
 

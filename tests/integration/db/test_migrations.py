@@ -45,7 +45,7 @@ def test_migrations_upgrade_downgrade_and_repeat(postgres_urls: dict[str, str]) 
         text=True,
         env=_alembic_env(migration_url),
     )
-    assert "0002" in current.stdout
+    assert "0003" in current.stdout
 
     with psycopg.connect(psycopg_url) as connection:
         with connection.cursor() as cursor:

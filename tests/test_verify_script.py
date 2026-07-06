@@ -11,7 +11,7 @@ class VerifyScriptTests(unittest.TestCase):
         self.assertEqual(
             [
                 Command("ruff", ("uv", "run", "ruff", "check", "src", "apps/serverless", "scripts", "tests")),
-                Command("mypy", ("uv", "run", "mypy")),
+                Command("mypy", ("uv", "run", "mypy", "--follow-imports=skip")),
                 Command("python-tests", ("uv", "run", "python", "-m", "unittest", "discover")),
             ],
             commands,

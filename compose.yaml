@@ -18,5 +18,59 @@ services:
       - vyu-postgres-data:/var/lib/postgresql/data
       - ./deploy/local/postgres/001_roles.sql:/docker-entrypoint-initdb.d/001_roles.sql:ro
 
+  localstack:
+    image: localstack/localstack:4.3
+    ports:
+      - "127.0.0.1:4566:4566"
+    environment:
+      SERVICES: sqs
+      AWS_DEFAULT_REGION: us-east-1
+    volumes:
+      - ./deploy/local/localstack:/etc/localstack/init/ready.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "awslocal sqs list-queues >/dev/null 2>&1 || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: .
+      dockerfile: deploy/docker/api.Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      VYU_ENV: local
+      VYU_DATABASE_URL: postgresql+psycopg://vyu_app:local-vyu-password@postgres:5432/vyu
+      VYU_AUTH_MODE: local_hs256
+      VYU_HS256_SECRET: local-dev-only-secret
+    ports:
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8000/v1/health/live"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  worker:
+    build:
+      context: .
+      dockerfile: deploy/docker/worker.Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    environment:
+      VYU_ENV: local
+      VYU_DATABASE_URL: postgresql+psycopg://vyu_app:local-vyu-password@postgres:5432/vyu
+      VYU_SQS_QUEUE_URL: http://localstack:4566/000000000000/vyu-jobs
+      VYU_SQS_ENDPOINT_URL: http://localstack:4566
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: us-east-1
+      VYU_WORKER_ID: compose-worker
+
 volumes:
   vyu-postgres-data:

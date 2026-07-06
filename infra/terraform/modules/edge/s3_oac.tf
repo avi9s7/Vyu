@@ -16,7 +16,7 @@ data "aws_iam_policy_document" "evidence_cloudfront_oac" {
       identifiers = ["*"]
     }
 
-    actions   = ["s3:*"]
+    actions = ["s3:*"]
     resources = [
       "arn:aws:s3:::${var.evidence_bucket_name}",
       "arn:aws:s3:::${var.evidence_bucket_name}/*",

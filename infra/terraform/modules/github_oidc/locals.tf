@@ -3,8 +3,8 @@ data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 locals {
-  account_id = data.aws_caller_identity.current.account_id
-  partition  = data.aws_partition.current.partition
+  account_id  = data.aws_caller_identity.current.account_id
+  partition   = data.aws_partition.current.partition
   name_prefix = "vyu-${var.environment}"
 
   github_oidc_provider_arn = coalesce(

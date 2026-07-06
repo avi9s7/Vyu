@@ -37,7 +37,7 @@ resource "aws_ssm_parameter" "otel_collector_config" {
         dimension_rollup_option = "NoDimensionRollup"
       }
       awscloudwatchlogs = {
-        log_group_name = aws_cloudwatch_log_group.otel_collector.name
+        log_group_name  = aws_cloudwatch_log_group.otel_collector.name
         log_stream_name = "collector"
         region          = var.aws_region
       }

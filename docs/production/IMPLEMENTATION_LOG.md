@@ -347,6 +347,21 @@ uv run python scripts/verify.py --scope backend
 
 Plan 3 exit gate satisfied after squash merge to `main`.
 
+### 2026-07-06 — Plan 4 Task 1: Terraform environment structure (commit `d64af85f`)
+
+**Goal:** Establish Terraform module layout, remote-state policy, and structure tests.
+
+**Key paths:** `infra/terraform/{versions.tf,modules/*,environments/{dev,staging,prod}}`, `tests/infra/test_terraform_structure.py`, `infra/terraform/bootstrap/README.md`
+
+**Verification:**
+
+```powershell
+terraform -chdir=infra/terraform/environments/dev init -backend=false
+terraform -chdir=infra/terraform/environments/dev fmt -recursive
+terraform -chdir=infra/terraform/environments/dev validate
+uv run pytest tests/infra/test_terraform_structure.py -q
+```
+
 ---
 
 ## Quick reference — verification scopes

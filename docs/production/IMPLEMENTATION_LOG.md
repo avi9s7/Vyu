@@ -362,7 +362,7 @@ terraform -chdir=infra/terraform/environments/dev validate
 uv run pytest tests/infra/test_terraform_structure.py -q
 ```
 
-### 2026-07-06 — Plan 4 Task 2: Network and KMS foundations (commit pending)
+### 2026-07-06 — Plan 4 Task 2: Network and KMS foundations (commit `64c6cde4`)
 
 **Goal:** Private VPC across three AZs, VPC endpoints, least-privilege security groups, and customer-managed KMS keys.
 
@@ -374,6 +374,22 @@ uv run pytest tests/infra/test_terraform_structure.py -q
 terraform -chdir=infra/terraform/environments/dev init -backend=false
 terraform -chdir=infra/terraform/environments/dev validate
 uv run pytest tests/infra -q
+```
+
+### 2026-07-06 — Plan 4 Task 3: RDS, S3, SQS, and Secrets (commit pending)
+
+**Goal:** Encrypted data plane (RDS PostgreSQL 17, versioned S3 buckets, SQS workloads with DLQs), Secrets Manager containers (no versions in Terraform), and operator secret CLI.
+
+**Key paths:** `infra/terraform/modules/{data,queues}/*`, `scripts/configure_secrets.py`, `tests/infra/test_data_policy.py`, environment wiring in `infra/terraform/environments/*/main.tf`
+
+**Verification:**
+
+```powershell
+terraform -chdir=infra/terraform/environments/dev init -backend=false
+terraform -chdir=infra/terraform/environments/dev fmt -recursive
+terraform -chdir=infra/terraform/environments/dev validate
+uv run pytest tests/infra -q
+uv run ruff check scripts/configure_secrets.py tests/infra/test_data_policy.py
 ```
 
 ---

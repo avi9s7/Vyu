@@ -110,12 +110,6 @@ variable "ecr_pull_role_arns" {
   default     = []
 }
 
-variable "alb_certificate_arn" {
-  description = "ACM certificate ARN for the HTTPS listener. Leave empty until edge TLS is provisioned."
-  type        = string
-  default     = ""
-}
-
 variable "web_desired_count" {
   type    = number
   default = 2

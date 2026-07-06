@@ -71,7 +71,10 @@ variable "compute_ecr_push_role_arns" {
   default = []
 }
 
-variable "compute_alb_certificate_arn" {
-  type    = string
-  default = ""
+variable "edge_primary_domain_name" {
+  type = string
+}
+
+variable "edge_route53_zone_id" {
+  type = string
 }

@@ -469,6 +469,28 @@ terraform -chdir=infra/terraform/environments/dev validate
 uv run pytest tests/infra -q
 ```
 
+### 2026-07-06 — Plan 4 Task 9: Deployment runbooks and smoke tooling (commit pending)
+
+**Goal:** Operator runbooks for deploy, rollback, and secret rotation; HTTPS `deploy_smoke.py` for post-promotion verification.
+
+**Key paths:** `docs/production/runbooks/deployment.md`, `rollback.md`, `secret-rotation.md`, `scripts/deploy_smoke.py`, `src/vyu/api/routers/me.py`
+
+**Changes:**
+
+- Deployment runbook: prerequisites, OIDC identity, secret checks, plan review, migration/deploy workflow, smoke, dashboards, evidence template, abort conditions.
+- Rollback runbook: application vs infrastructure vs database forward-fix paths with ECS revision and digest verification.
+- Secret rotation runbook: overlap window, `configure_secrets.py`, forced ECS redeploy, ECS secret refresh caveat, audit template.
+- `deploy_smoke.py`: HTTPS liveness/readiness/version, auth rejection, `/v1/me`, idempotent research submission, queue/event visibility, security headers; token read from env only.
+- Added `/v1/me` authenticated principal endpoint for production smoke checks.
+
+**Verification:**
+
+```powershell
+uv run pytest tests/deploy/test_deploy_smoke.py -q
+```
+
+**Follow-ups:** Staging deploy/rollback/rotation exercise evidence remains operator-run before Plan 4 exit gate.
+
 ---
 
 

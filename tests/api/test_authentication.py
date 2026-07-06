@@ -60,6 +60,21 @@ def test_valid_token_with_membership_returns_principal(auth_context: AuthTestCon
     assert payload["authentication_method"] == "local_hs256"
 
 
+def test_me_endpoint_returns_authenticated_principal(auth_context: AuthTestContext) -> None:
+    token = bearer_token(auth_context)
+    response = auth_context.client.get(
+        "/v1/me",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["user_id"] == str(auth_context.user_id)
+    assert payload["tenant_id"] == str(auth_context.tenant_id)
+    assert payload["workspace_id"] == str(auth_context.workspace_id)
+    assert payload["role"] == auth_context.role
+    assert "secret" not in response.text.lower()
+
+
 def test_local_hs256_rejected_in_production() -> None:
     with pytest.raises(ValueError, match="local_hs256 auth mode is not allowed"):
         AuthSettings(env="production", auth_mode="local_hs256")

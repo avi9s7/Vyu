@@ -529,6 +529,23 @@ Pilot GitHub environments (`dev`, `staging`, `prod`) and placeholder variables s
 
 **Follow-ups:** Replace placeholder ARNs/hostnames after real `terraform apply`.
 
+### 2026-07-06 — Plan 4 remote-state bootstrap stack (commit `d229e5c7`)
+
+**Goal:** One-time Terraform bootstrap for encrypted S3 state, DynamoDB locking, and KMS before environment applies.
+
+**Key paths:** `infra/terraform/bootstrap/*`, `scripts/sync_backend_hcl_from_bootstrap.ps1`, `scripts/plan4_operator_checklist.ps1`, `tests/infra/test_bootstrap_policy.py`
+
+**Verification:**
+
+```powershell
+terraform -chdir=infra/terraform/bootstrap init -backend=false
+terraform -chdir=infra/terraform/bootstrap validate
+uv run pytest tests/infra/test_bootstrap_policy.py -q
+powershell -File scripts/plan4_operator_checklist.ps1
+```
+
+**Follow-ups:** Install AWS CLI, run bootstrap `terraform apply`, sync `backend.hcl`, then `dev` apply.
+
 ---
 
 

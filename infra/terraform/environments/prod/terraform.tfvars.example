@@ -14,3 +14,6 @@ identity_resource_server_identifier = "https://api.vyu.example"
 
 edge_primary_domain_name = "app.vyu.example"
 edge_route53_zone_id     = "Z000000000000000000000"
+
+# observability_critical_alarm_owner_acknowledged = true
+# observability_on_call_email_addresses = ["oncall@vyu.example"]

@@ -78,3 +78,13 @@ variable "edge_primary_domain_name" {
 variable "edge_route53_zone_id" {
   type = string
 }
+
+variable "observability_on_call_email_addresses" {
+  type    = list(string)
+  default = []
+}
+
+variable "observability_critical_alarm_owner_acknowledged" {
+  type    = bool
+  default = false
+}

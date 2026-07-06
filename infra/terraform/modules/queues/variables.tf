@@ -10,9 +10,3 @@ variable "aws_region" {
 variable "kms_key_arn" {
   type = string
 }
-
-variable "alarm_actions" {
-  description = "SNS topic ARNs for queue alarms."
-  type        = list(string)
-  default     = []
-}

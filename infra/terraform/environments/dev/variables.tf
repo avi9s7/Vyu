@@ -52,3 +52,26 @@ variable "identity_oidc_identity_providers" {
   }))
   default = {}
 }
+
+variable "compute_image_digests" {
+  type = object({
+    web    = string
+    api    = string
+    worker = string
+  })
+  default = {
+    web    = "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    api    = "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    worker = "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  }
+}
+
+variable "compute_ecr_push_role_arns" {
+  type    = list(string)
+  default = []
+}
+
+variable "compute_alb_certificate_arn" {
+  type    = string
+  default = ""
+}

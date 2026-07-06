@@ -406,6 +406,20 @@ terraform -chdir=infra/terraform/environments/dev validate
 uv run pytest tests/infra/test_identity_policy.py tests/test_aws_cognito_provisioning.py -q
 ```
 
+### 2026-07-06 — Plan 4 Task 5: ECS application services (commit pending)
+
+**Goal:** ECR repositories, isolated ECS Fargate services (web/API/worker), migration task definition, ALB target groups, IAM least-privilege roles, queue-depth autoscaling, and non-root web container.
+
+**Key paths:** `infra/terraform/modules/compute/*`, `deploy/docker/web.Dockerfile`, `tests/infra/test_compute_policy.py`
+
+**Verification:**
+
+```powershell
+terraform -chdir=infra/terraform/environments/dev init -backend=false
+terraform -chdir=infra/terraform/environments/dev validate
+uv run pytest tests/infra -q
+```
+
 ---
 
 

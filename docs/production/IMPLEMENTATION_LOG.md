@@ -448,6 +448,27 @@ terraform -chdir=infra/terraform/environments/dev validate
 uv run pytest tests/infra/test_observability_policy.py tests/observability -q
 ```
 
+### 2026-07-06 — Plan 4 Task 8: GitHub OIDC and deployment CI (commit `2f11ddd4`)
+
+**Goal:** Least-privilege GitHub Actions OIDC roles for Terraform plan/apply and ECR image push; PR plan workflow and protected-environment deploy workflow with migration gating and smoke rollback.
+
+**Key paths:** `infra/terraform/modules/github_oidc/*`, `.github/workflows/infra-plan.yml`, `.github/workflows/deploy.yml`, `tests/infra/test_ci_identity_policy.py`
+
+**Changes:**
+
+- `github_oidc` module: plan (PR/main/cursor branches), apply (environment-scoped), and build (main + environment) IAM roles with convention-based ECS/ECR ARNs so the module can precede `compute`.
+- Environments wire `ecr_push_role_arns` to `module.github_oidc.build_role_arn`; removed unused `compute_ecr_push_role_arns` variable.
+- `infra-plan.yml`: fmt, validate, infra policy tests, lint, and OIDC-backed `terraform plan` with artifact upload.
+- `deploy.yml`: verified plan SHA, immutable image build/scan/attest, migration wait, apply, smoke, and rollback evidence.
+
+**Verification:**
+
+```powershell
+terraform -chdir=infra/terraform/environments/dev init -backend=false
+terraform -chdir=infra/terraform/environments/dev validate
+uv run pytest tests/infra -q
+```
+
 ---
 
 

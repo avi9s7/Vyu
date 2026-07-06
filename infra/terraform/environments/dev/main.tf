@@ -45,6 +45,19 @@ module "identity" {
   oidc_identity_providers    = var.identity_oidc_identity_providers
 }
 
+module "github_oidc" {
+  source = "../../modules/github_oidc"
+
+  environment      = var.environment
+  aws_region       = var.aws_region
+  ecr_repository_names = [
+    "vyu-${var.environment}-web",
+    "vyu-${var.environment}-api",
+    "vyu-${var.environment}-worker",
+  ]
+  terraform_state_object_key = "${var.environment}/terraform.tfstate"
+}
+
 module "compute" {
   source = "../../modules/compute"
 
@@ -63,7 +76,7 @@ module "compute" {
   queue_arns                      = module.queues.queue_arns
   queue_urls                      = module.queues.queue_urls
   image_digests                   = var.compute_image_digests
-  ecr_push_role_arns              = var.compute_ecr_push_role_arns
+  ecr_push_role_arns              = [module.github_oidc.build_role_arn]
 }
 
 module "edge" {
@@ -101,10 +114,4 @@ module "observability" {
   dlq_names                         = module.queues.dlq_names
   on_call_email_addresses           = var.observability_on_call_email_addresses
   critical_alarm_owner_acknowledged = var.observability_critical_alarm_owner_acknowledged
-}
-
-module "github_oidc" {
-  source      = "../../modules/github_oidc"
-  environment = var.environment
-  aws_region  = var.aws_region
 }

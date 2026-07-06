@@ -392,7 +392,7 @@ uv run pytest tests/infra -q
 uv run ruff check scripts/configure_secrets.py tests/infra/test_data_policy.py
 ```
 
-### 2026-07-06 — Plan 4 Task 4: Cognito authorization-code identity (commit pending)
+### 2026-07-06 — Plan 4 Task 4: Cognito authorization-code identity (commit `fb6005cc`)
 
 **Goal:** Composed Cognito user pool with authorization-code browser client, confidential machine client, API resource scopes, managed login domain, refresh-token rotation, and enterprise federation inputs.
 

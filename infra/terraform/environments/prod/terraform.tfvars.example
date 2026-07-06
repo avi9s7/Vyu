@@ -1,2 +1,19 @@
 environment = "prod"
 aws_region  = "ap-south-1"
+
+identity_callback_urls = [
+  "https://app.vyu.example/auth/callback",
+]
+
+identity_logout_urls = [
+  "https://app.vyu.example/logout",
+]
+
+identity_cognito_domain_prefix      = "vyu-prod-login-example"
+identity_resource_server_identifier = "https://api.vyu.example"
+
+edge_primary_domain_name = "app.vyu.example"
+edge_route53_zone_id     = "Z000000000000000000000"
+
+# observability_critical_alarm_owner_acknowledged = true
+# observability_on_call_email_addresses = ["oncall@vyu.example"]

@@ -362,9 +362,165 @@ terraform -chdir=infra/terraform/environments/dev validate
 uv run pytest tests/infra/test_terraform_structure.py -q
 ```
 
+### 2026-07-06 — Plan 4 Task 2: Network and KMS foundations (commit `64c6cde4`)
+
+**Goal:** Private VPC across three AZs, VPC endpoints, least-privilege security groups, and customer-managed KMS keys.
+
+**Key paths:** `infra/terraform/modules/{network,kms}/*`, `tests/infra/test_network_policy.py`
+
+**Verification:**
+
+```powershell
+terraform -chdir=infra/terraform/environments/dev init -backend=false
+terraform -chdir=infra/terraform/environments/dev validate
+uv run pytest tests/infra -q
+```
+
+### 2026-07-06 — Plan 4 Task 3: RDS, S3, SQS, and Secrets (commit `4533a477`)
+
+**Goal:** Encrypted data plane (RDS PostgreSQL 17, versioned S3 buckets, SQS workloads with DLQs), Secrets Manager containers (no versions in Terraform), and operator secret CLI.
+
+**Key paths:** `infra/terraform/modules/{data,queues}/*`, `scripts/configure_secrets.py`, `tests/infra/test_data_policy.py`, environment wiring in `infra/terraform/environments/*/main.tf`
+
+**Verification:**
+
+```powershell
+terraform -chdir=infra/terraform/environments/dev init -backend=false
+terraform -chdir=infra/terraform/environments/dev fmt -recursive
+terraform -chdir=infra/terraform/environments/dev validate
+uv run pytest tests/infra -q
+uv run ruff check scripts/configure_secrets.py tests/infra/test_data_policy.py
+```
+
+### 2026-07-06 — Plan 4 Task 4: Cognito authorization-code identity (commit `fb6005cc`)
+
+**Goal:** Composed Cognito user pool with authorization-code browser client, confidential machine client, API resource scopes, managed login domain, refresh-token rotation, and enterprise federation inputs.
+
+**Key paths:** `infra/terraform/modules/identity/*`, `deploy/aws/cognito/*` (compatibility wrapper), `tests/infra/test_identity_policy.py`
+
+**Verification:**
+
+```powershell
+terraform -chdir=infra/terraform/environments/dev init -backend=false
+terraform -chdir=infra/terraform/environments/dev validate
+uv run pytest tests/infra/test_identity_policy.py tests/test_aws_cognito_provisioning.py -q
+```
+
+### 2026-07-06 — Plan 4 Task 5: ECS application services (commit `1361eaba`)
+
+**Goal:** ECR repositories, isolated ECS Fargate services (web/API/worker), migration task definition, ALB target groups, IAM least-privilege roles, queue-depth autoscaling, and non-root web container.
+
+**Key paths:** `infra/terraform/modules/compute/*`, `deploy/docker/web.Dockerfile`, `tests/infra/test_compute_policy.py`
+
+**Verification:**
+
+```powershell
+terraform -chdir=infra/terraform/environments/dev init -backend=false
+terraform -chdir=infra/terraform/environments/dev validate
+uv run pytest tests/infra -q
+```
+
+### 2026-07-06 — Plan 4 Task 6: CloudFront, WAF, TLS, DNS (commit `fd5c4528`)
+
+**Goal:** Route 53 + ACM validation, CloudFront with WAF and security headers, S3 OAC for evidence origin, ALB HTTPS listeners, and API/upload body-size limits at the edge.
+
+**Key paths:** `infra/terraform/modules/edge/*`, `tests/infra/test_edge_policy.py`
+
+**Verification:**
+
+```powershell
+terraform -chdir=infra/terraform/environments/dev init -backend=false
+terraform -chdir=infra/terraform/environments/dev validate
+uv run pytest tests/infra/test_edge_policy.py -q
+```
+
+### 2026-07-06 — Plan 4 Task 7: Production telemetry and alarms (commit `b267c8c4`)
+
+**Goal:** SNS alarm routing, CloudWatch dashboards/alarms, ADOT collector config, structured JSON logging with redaction, and OpenTelemetry export hooks.
+
+**Key paths:** `infra/terraform/modules/observability/*`, `src/vyu/observability/*`, `tests/infra/test_observability_policy.py`
+
+**Verification:**
+
+```powershell
+terraform -chdir=infra/terraform/environments/dev init -backend=false
+terraform -chdir=infra/terraform/environments/dev validate
+uv run pytest tests/infra/test_observability_policy.py tests/observability -q
+```
+
+### 2026-07-06 — Plan 4 Task 8: GitHub OIDC and deployment CI (commit `2274ef26`)
+
+**Goal:** Least-privilege GitHub Actions OIDC roles for Terraform plan/apply and ECR image push; PR plan workflow and protected-environment deploy workflow with migration gating and smoke rollback.
+
+**Key paths:** `infra/terraform/modules/github_oidc/*`, `.github/workflows/infra-plan.yml`, `.github/workflows/deploy.yml`, `tests/infra/test_ci_identity_policy.py`
+
+**Changes:**
+
+- `github_oidc` module: plan (PR/main/cursor branches), apply (environment-scoped), and build (main + environment) IAM roles with convention-based ECS/ECR ARNs so the module can precede `compute`.
+- Environments wire `ecr_push_role_arns` to `module.github_oidc.build_role_arn`; removed unused `compute_ecr_push_role_arns` variable.
+- `infra-plan.yml`: fmt, validate, infra policy tests, lint, and OIDC-backed `terraform plan` with artifact upload.
+- `deploy.yml`: verified plan SHA, immutable image build/scan/attest, migration wait, apply, smoke, and rollback evidence.
+
+**Verification:**
+
+```powershell
+terraform -chdir=infra/terraform/environments/dev init -backend=false
+terraform -chdir=infra/terraform/environments/dev validate
+uv run pytest tests/infra -q
+```
+
+### 2026-07-06 — Plan 4 Task 9: Deployment runbooks and smoke tooling (commit `a18753cc`)
+
+**Goal:** Operator runbooks for deploy, rollback, and secret rotation; HTTPS `deploy_smoke.py` for post-promotion verification.
+
+**Key paths:** `docs/production/runbooks/deployment.md`, `rollback.md`, `secret-rotation.md`, `scripts/deploy_smoke.py`, `src/vyu/api/routers/me.py`
+
+**Changes:**
+
+- Deployment runbook: prerequisites, OIDC identity, secret checks, plan review, migration/deploy workflow, smoke, dashboards, evidence template, abort conditions.
+- Rollback runbook: application vs infrastructure vs database forward-fix paths with ECS revision and digest verification.
+- Secret rotation runbook: overlap window, `configure_secrets.py`, forced ECS redeploy, ECS secret refresh caveat, audit template.
+- `deploy_smoke.py`: HTTPS liveness/readiness/version, auth rejection, `/v1/me`, idempotent research submission, queue/event visibility, security headers; token read from env only.
+- Added `/v1/me` authenticated principal endpoint for production smoke checks.
+
+**Verification:**
+
+```powershell
+uv run pytest tests/deploy/test_deploy_smoke.py -q
+```
+
+**Follow-ups:** Staging deploy/rollback/rotation exercise evidence remains operator-run before Plan 4 exit gate.
+
+### 2026-07-06 — Plan 4 Task 10: Backup and restore verification (commit `b80900d2`)
+
+**Goal:** RDS PITR/S3 version recovery targets, `verify_restore.py` for restored database validation, and database restore runbook with RPO/RTO evidence.
+
+**Key paths:** `scripts/verify_restore.py`, `docs/production/runbooks/database-restore.md`, `infra/terraform/modules/data/*`, `tests/infra/test_restore_policy.py`, `tests/integration/db/test_verify_restore.py`
+
+**Changes:**
+
+- Declared pilot recovery targets (RPO <= 15 minutes, RTO <= 4 hours) in data module locals/outputs.
+- Enabled `copy_tags_to_snapshot` on RDS; S3 versioning/lifecycle already present for application buckets.
+- `verify_restore.py`: migration revision, fixture hashes, tenant isolation, audit presence, post-restore absence checks, and optional S3 version/database reference verification.
+- `database-restore.md`: staging PITR drill, isolated verification task, manifest format, evidence template, cleanup.
+
+**Verification:**
+
+```powershell
+terraform -chdir=infra/terraform/environments/dev init -backend=false
+terraform -chdir=infra/terraform/environments/dev validate
+uv run pytest tests/infra/test_restore_policy.py -q
+uv run pytest tests/integration/db/test_verify_restore.py -q
+```
+
+**Follow-ups:** Live staging RDS/S3 restore drill and measured RPO/RTO evidence remain operator-run before Plan 4 exit gate.
+
+### 2026-07-06 — Plan 4 Tasks 2–10 PR opened ([#5](https://github.com/avi9s7/Vyu/pull/5))
+
+Stacked on Task 1 ([#4](https://github.com/avi9s7/Vyu/pull/4)). CI fixes pushed for ruff, terraform fmt, setup-terraform action pin, and RDS policy assertions.
+
 ---
 
-## Quick reference — verification scopes
 
 | Scope | Command | Requires |
 | --- | --- | --- |

@@ -1,0 +1,252 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+      plan_artifact_name:
+        description: Terraform plan artifact name containing the reviewed commit SHA
+        required: true
+        type: string
+      commit_sha:
+        description: Exact commit SHA that produced the reviewed plan artifact
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.workflow }}-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  verify-plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          ref: ${{ inputs.commit_sha }}
+
+      - name: Download reviewed plan metadata
+        uses: actions/download-artifact@02028e3e68e42c2f247713d2523f07ca2893a0e3 # v4.1.9
+        with:
+          name: terraform-plan-metadata-${{ inputs.commit_sha }}
+
+      - name: Verify commit SHA alignment
+        run: |
+          test "$(jq -r '.commit_sha' plan-metadata.json)" = "${{ inputs.commit_sha }}"
+
+  build-images:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    needs: verify-plan
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    environment: ${{ inputs.environment }}
+    env:
+      AWS_REGION: ap-south-1
+      IMAGE_TAG: ${{ inputs.commit_sha }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          ref: ${{ inputs.commit_sha }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # v5.1.0
+        with:
+          role-to-assume: ${{ vars.AWS_BUILD_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@062b18b135a7a551d17eb97f9d2866c14f12af3e # v2.0.1
+
+      - name: Build, scan, and push immutable images
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          set -euo pipefail
+          for image in web api worker; do
+            image_ref="${REGISTRY}/vyu-${{ inputs.environment }}-${image}:${IMAGE_TAG}"
+            docker build -f "deploy/docker/${image}.Dockerfile" -t "${image_ref}" .
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+              aquasec/trivy:0.58.1 image --exit-code 1 --severity CRITICAL,HIGH "${image_ref}"
+            docker push "${image_ref}"
+            DIGEST="$(docker inspect --format='{{index .RepoDigests 0}}' "${image_ref}" | cut -d@ -f2)"
+            printf '%s=%s\n' "${image}" "${DIGEST}" >> image-digests.env
+          done
+
+      - name: Load API image digest
+        id: api-digest
+        run: echo "digest=$(grep '^api=' image-digests.env | cut -d= -f2)" >> "$GITHUB_OUTPUT"
+
+      - name: Attest API image provenance
+        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
+        with:
+          subject-name: ${{ steps.login-ecr.outputs.registry }}/vyu-${{ inputs.environment }}-api
+          subject-digest: ${{ steps.api-digest.outputs.digest }}
+          push-to-registry: false
+
+      - name: Upload image digests
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: image-digests-${{ inputs.commit_sha }}
+          path: image-digests.env
+          retention-days: 7
+
+  migrate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    needs: build-images
+    permissions:
+      contents: read
+      id-token: write
+    environment: ${{ inputs.environment }}
+    env:
+      AWS_REGION: ap-south-1
+    steps:
+      - name: Check out source
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          ref: ${{ inputs.commit_sha }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # v5.1.0
+        with:
+          role-to-assume: ${{ vars.AWS_APPLY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Run database migration task
+        run: |
+          set -euo pipefail
+          TASK_ARN="$(aws ecs run-task \
+            --cluster "vyu-${{ inputs.environment }}" \
+            --task-definition "vyu-${{ inputs.environment }}-migration" \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[${{ vars.AWS_PRIVATE_SUBNET_IDS }}],securityGroups=[${{ vars.AWS_MIGRATION_SECURITY_GROUP_ID }}],assignPublicIp=DISABLED}" \
+            --count 1 \
+            --query 'tasks[0].taskArn' \
+            --output text)"
+          aws ecs wait tasks-stopped \
+            --cluster "vyu-${{ inputs.environment }}" \
+            --tasks "${TASK_ARN}"
+          EXIT_CODE="$(aws ecs describe-tasks \
+            --cluster "vyu-${{ inputs.environment }}" \
+            --tasks "${TASK_ARN}" \
+            --query 'tasks[0].containers[0].exitCode' \
+            --output text)"
+          if [ "${EXIT_CODE}" != "0" ]; then
+            echo "Migration task failed with exit code ${EXIT_CODE}"
+            exit 1
+          fi
+
+  apply:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    needs: migrate
+    permissions:
+      contents: read
+      id-token: write
+    environment: ${{ inputs.environment }}
+    env:
+      AWS_REGION: ap-south-1
+    steps:
+      - name: Check out source
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          ref: ${{ inputs.commit_sha }}
+
+      - name: Download reviewed plan
+        uses: actions/download-artifact@02028e3e68e42c2f247713d2523f07ca2893a0e3 # v4.1.9
+        with:
+          name: ${{ inputs.plan_artifact_name }}
+
+      - name: Download image digests
+        uses: actions/download-artifact@02028e3e68e42c2f247713d2523f07ca2893a0e3 # v4.1.9
+        with:
+          name: image-digests-${{ inputs.commit_sha }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # v5.1.0
+        with:
+          role-to-assume: ${{ vars.AWS_APPLY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: 1.9.8
+
+      - name: Apply reviewed plan
+        working-directory: infra/terraform/environments/${{ inputs.environment }}
+        run: |
+          terraform init -backend-config=backend.hcl
+          terraform apply -input=false tfplan
+
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: apply
+    permissions:
+      contents: read
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Check HTTPS liveness
+        run: |
+          curl -fsS "https://${{ vars.APP_BASE_URL }}/api/health"
+          curl -fsS "https://${{ vars.APP_BASE_URL }}/v1/health/live"
+
+  rollback:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    needs: smoke
+    if: failure()
+    permissions:
+      contents: read
+      id-token: write
+    environment: ${{ inputs.environment }}
+    env:
+      AWS_REGION: ap-south-1
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # v5.1.0
+        with:
+          role-to-assume: ${{ vars.AWS_APPLY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Roll back ECS services
+        run: |
+          set -euo pipefail
+          for service in web api worker; do
+            aws ecs update-service \
+              --cluster "vyu-${{ inputs.environment }}" \
+              --service "vyu-${{ inputs.environment }}-${service}" \
+              --deployment-configuration "maximumPercent=200,minimumHealthyPercent=100" \
+              --force-new-deployment
+          done
+
+      - name: Record rollback evidence
+        run: |
+          printf '{"commit_sha":"%s","environment":"%s","triggered_at":"%s","reason":"smoke_failure"}\n' \
+            "${{ inputs.commit_sha }}" "${{ inputs.environment }}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            > rollback-evidence.json
+
+      - name: Upload rollback evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: rollback-evidence-${{ inputs.commit_sha }}
+          path: rollback-evidence.json
+          retention-days: 30

@@ -469,7 +469,7 @@ terraform -chdir=infra/terraform/environments/dev validate
 uv run pytest tests/infra -q
 ```
 
-### 2026-07-06 — Plan 4 Task 9: Deployment runbooks and smoke tooling (commit pending)
+### 2026-07-06 — Plan 4 Task 9: Deployment runbooks and smoke tooling (commit `a18753cc`)
 
 **Goal:** Operator runbooks for deploy, rollback, and secret rotation; HTTPS `deploy_smoke.py` for post-promotion verification.
 

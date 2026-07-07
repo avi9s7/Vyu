@@ -19,7 +19,6 @@ Write-Host "=== Plan 4 operator checklist ===" -ForegroundColor Cyan
 
 $checks = @(
     @{ Name = "terraform"; Ok = (Test-CommandAvailable "terraform") },
-    @{ Name = "aws"; Ok = (Test-CommandAvailable "aws") },
     @{ Name = "uv"; Ok = (Test-CommandAvailable "uv") },
     @{ Name = "gh"; Ok = (Test-CommandAvailable $Gh) }
 )
@@ -27,6 +26,12 @@ $checks = @(
 foreach ($check in $checks) {
     $status = if ($check.Ok) { "ok" } else { "missing" }
     Write-Host ("[{0}] {1}" -f $status, $check.Name)
+}
+
+if (-not (Get-Command aws -ErrorAction SilentlyContinue)) {
+    Write-Host "[missing] aws (run scripts/install_aws_cli.ps1)"
+} else {
+    Write-Host "[ok] aws"
 }
 
 $localFiles = @(
@@ -47,11 +52,6 @@ Write-Host "GitHub repository variables:"
 
 Write-Host ""
 Write-Host "Next commands (after AWS credentials are configured):"
-Write-Host "  1. powershell -File scripts/bootstrap_aws_placeholders.ps1"
-Write-Host "  2. copy infra\terraform\bootstrap\terraform.tfvars.example infra\terraform\bootstrap\terraform.tfvars"
-Write-Host "  3. terraform -chdir=infra/terraform/bootstrap init && terraform apply"
-Write-Host "  4. powershell -File scripts/sync_backend_hcl_from_bootstrap.ps1"
-Write-Host "  5. terraform -chdir=infra/terraform/environments/dev init -backend-config=backend.hcl"
-Write-Host "  6. terraform -chdir=infra/terraform/environments/dev apply"
-Write-Host "  7. uv run python scripts/render_github_ci_vars.py dev"
-Write-Host "  8. Trigger Deploy workflow for staging per docs/production/runbooks/deployment.md"
+Write-Host "  1. powershell -File scripts/install_aws_cli.ps1"
+Write-Host "  2. aws configure   # or aws configure sso"
+Write-Host "  3. powershell -File scripts/plan4_resume.ps1 -Phase A"

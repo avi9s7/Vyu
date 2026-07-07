@@ -10,6 +10,36 @@ import sys
 from pathlib import Path
 
 
+PILOT_AWS_ACCOUNT_ID = "123456789012"
+
+PLACEHOLDER_VALUES = {
+    "dev": {
+        "plan_role": f"arn:aws:iam::{PILOT_AWS_ACCOUNT_ID}:role/vyu-dev-github-plan",
+        "apply_role": f"arn:aws:iam::{PILOT_AWS_ACCOUNT_ID}:role/vyu-dev-github-apply",
+        "build_role": f"arn:aws:iam::{PILOT_AWS_ACCOUNT_ID}:role/vyu-dev-github-build",
+        "subnet_ids": "subnet-0aaa1111bbbb2222,subnet-0ccc3333dddd4444,subnet-0eee5555ffff6666",
+        "migration_sg": "sg-0placeholdermigration",
+        "app_base_url": "dev.app.vyu.example",
+    },
+    "staging": {
+        "plan_role": f"arn:aws:iam::{PILOT_AWS_ACCOUNT_ID}:role/vyu-staging-github-plan",
+        "apply_role": f"arn:aws:iam::{PILOT_AWS_ACCOUNT_ID}:role/vyu-staging-github-apply",
+        "build_role": f"arn:aws:iam::{PILOT_AWS_ACCOUNT_ID}:role/vyu-staging-github-build",
+        "subnet_ids": "subnet-0aaa1111bbbb2222,subnet-0ccc3333dddd4444,subnet-0eee5555ffff6666",
+        "migration_sg": "sg-0placeholdermigration",
+        "app_base_url": "staging.app.vyu.example",
+    },
+    "prod": {
+        "plan_role": f"arn:aws:iam::{PILOT_AWS_ACCOUNT_ID}:role/vyu-prod-github-plan",
+        "apply_role": f"arn:aws:iam::{PILOT_AWS_ACCOUNT_ID}:role/vyu-prod-github-apply",
+        "build_role": f"arn:aws:iam::{PILOT_AWS_ACCOUNT_ID}:role/vyu-prod-github-build",
+        "subnet_ids": "subnet-0aaa1111bbbb2222,subnet-0ccc3333dddd4444,subnet-0eee5555ffff6666",
+        "migration_sg": "sg-0placeholdermigration",
+        "app_base_url": "app.vyu.example",
+    },
+}
+
+
 def _terraform_output(environment: str) -> dict[str, dict[str, str]]:
     root = Path(__file__).resolve().parents[1]
     env_dir = root / "infra" / "terraform" / "environments" / environment
@@ -42,22 +72,36 @@ def main() -> int:
         default="avi9s7/Vyu",
         help="GitHub repository slug for gh variable set.",
     )
+    parser.add_argument(
+        "--placeholder",
+        action="store_true",
+        help="Emit pilot placeholder gh commands without terraform output.",
+    )
     args = parser.parse_args()
 
-    outputs = _terraform_output(args.environment)
+    if args.placeholder:
+        pilot = PLACEHOLDER_VALUES[args.environment]
+        plan_role = pilot["plan_role"]
+        apply_role = pilot["apply_role"]
+        build_role = pilot["build_role"]
+        subnet_ids = pilot["subnet_ids"]
+        migration_sg = pilot["migration_sg"]
+        app_base_url = pilot["app_base_url"]
+    else:
+        outputs = _terraform_output(args.environment)
 
-    def value(name: str) -> str:
-        try:
-            return outputs[name]["value"]
-        except KeyError as exc:
-            raise SystemExit(f"Missing terraform output: {name}") from exc
+        def value(name: str) -> str:
+            try:
+                return outputs[name]["value"]
+            except KeyError as exc:
+                raise SystemExit(f"Missing terraform output: {name}") from exc
 
-    plan_role = value("github_plan_role_arn")
-    apply_role = value("github_apply_role_arn")
-    build_role = value("github_build_role_arn")
-    subnet_ids = value("private_subnet_ids_csv")
-    migration_sg = value("migration_security_group_id")
-    app_base_url = value("app_base_url")
+        plan_role = value("github_plan_role_arn")
+        apply_role = value("github_apply_role_arn")
+        build_role = value("github_build_role_arn")
+        subnet_ids = value("private_subnet_ids_csv")
+        migration_sg = value("migration_security_group_id")
+        app_base_url = value("app_base_url")
 
     print("# Repository variable (infra-plan workflow; dev plan role)")
     print(f'gh variable set AWS_PLAN_ROLE_ARN --repo {args.repo} --body "{plan_role}"')

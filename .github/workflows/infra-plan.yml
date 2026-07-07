@@ -55,7 +55,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     needs: policy
-    if: ${{ vars.AWS_PLAN_ROLE_ARN != '' }}
+    if: ${{ vars.AWS_PLAN_ROLE_ARN != '' && !startsWith(vars.AWS_PLAN_ROLE_ARN, 'arn:aws:iam::123456789012:role/') }}
     permissions:
       contents: read
       id-token: write

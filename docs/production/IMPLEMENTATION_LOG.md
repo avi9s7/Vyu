@@ -552,6 +552,37 @@ powershell -File scripts/plan4_operator_checklist.ps1
 
 **Key paths:** `docs/production/PLAN4_OPERATOR_HANDOFF.md`, `infra/terraform/bootstrap/secrets/*.example.json`, `tests/infra/test_plan4_handoff.py`
 
+### 2026-07-07 — Plan 4 resume automation (commit pending)
+
+**Goal:** Phase A–E orchestration, AWS CLI installer, GitHub reviewer wiring, pilot infra-plan skip, database URL secret template.
+
+**Key paths:** `scripts/plan4_resume.ps1`, `scripts/install_aws_cli.ps1`, `scripts/seed_plan4_secret_templates.ps1`, `scripts/setup_github_environment_reviewers.ps1`, `tests/infra/test_plan4_resume_scripts.py`
+
+**Verification:**
+
+```powershell
+uv run pytest tests/infra/test_plan4_handoff.py tests/infra/test_plan4_resume_scripts.py -q
+powershell -File scripts/plan4_resume.ps1 -Phase A -DryRun
+powershell -File scripts/setup_github_environment_reviewers.ps1
+```
+
+### 2026-07-07 — Plan 4 implementation phase concluded (engineering)
+
+**Decision:** Plan 4 row set to `blocked` (not `complete`). All Tasks 1–10 code, CI, runbooks, bootstrap, and operator handoff are on `main`. Operational exit gate (staging deploy, rollback, rotation, restore) deferred to `PLAN4_OPERATOR_HANDOFF.md`. Engineering proceeds to Plan 5.
+
+### 2026-07-07 — Plan 5 Task 1: governed evidence ingestion schema (commit pending)
+
+**Goal:** Alembic `0004` tables for documents, versions, evidence objects, chunks, ingestion events; tenant/workspace RLS; document status state machine.
+
+**Key paths:** `src/vyu/migrations/versions/0004_evidence_ingestion.py`, `src/vyu/ingestion/contracts.py`, `tests/unit/ingestion/test_state_machine.py`, `tests/integration/ingestion/test_migration.py`
+
+**Verification:**
+
+```powershell
+uv run pytest tests/unit/ingestion/test_state_machine.py -q
+uv run pytest tests/integration/ingestion/test_migration.py -q
+```
+
 ---
 
 

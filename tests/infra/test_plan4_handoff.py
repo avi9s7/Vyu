@@ -22,5 +22,5 @@ def test_plan4_operator_handoff_documents_blockers_and_resume_steps() -> None:
 
 def test_plan4_secret_examples_exist() -> None:
     secrets_dir = ROOT / "infra" / "terraform" / "bootstrap" / "secrets"
-    assert (secrets_dir / "database-connection.example.json").is_file()
+    assert (secrets_dir / "database-connection.example.txt").is_file()
     assert (secrets_dir / "providers.example.json").is_file()

@@ -4,7 +4,7 @@ Operator guide for finishing the Plan 4 exit gate after code merge to `main`. Us
 
 **Repository:** [avi9s7/Vyu](https://github.com/avi9s7/Vyu)  
 **Last updated:** 2026-07-07  
-**Verified Git SHA:** `bed07d0d` (see `docs/production/IMPLEMENTATION_STATUS.md`)
+**Verified Git SHA:** `6a9c0662` (see `docs/production/IMPLEMENTATION_STATUS.md`)
 
 ---
 
@@ -35,7 +35,11 @@ All Plan 4 Tasks 1–10 are merged to `main`:
 | `scripts/sync_backend_hcl_from_bootstrap.ps1` | Copy real bootstrap outputs into environment `backend.hcl` files |
 | `scripts/render_github_ci_vars.py` | Print `gh variable set` commands from Terraform outputs |
 | `scripts/plan4_operator_checklist.ps1` | Local prerequisite check |
-| `infra/terraform/bootstrap/secrets/*.example.json` | Dummy Secrets Manager payloads for post-apply seeding |
+| `scripts/plan4_resume.ps1` | Phase A–E orchestration (`-Phase A`, `-DryRun`) |
+| `scripts/install_aws_cli.ps1` | Install AWS CLI v2 on Windows when missing |
+| `scripts/seed_plan4_secret_templates.ps1` | Copy secret templates to gitignored `config/` |
+| `scripts/setup_github_environment_reviewers.ps1` | Add required reviewers to `staging` / `prod` |
+| `infra/terraform/bootstrap/secrets/*.example.*` | Dummy Secrets Manager payloads for post-apply seeding |
 
 **GitHub (live, placeholder values):**
 
@@ -44,6 +48,12 @@ All Plan 4 Tasks 1–10 are merged to `main`:
 - Per-environment variables: `AWS_APPLY_ROLE_ARN`, `AWS_BUILD_ROLE_ARN`, `AWS_PRIVATE_SUBNET_IDS`, `AWS_MIGRATION_SECURITY_GROUP_ID`, `APP_BASE_URL`
 
 **CI status:** `backend`, `frontend`, `platform`, and Infra Plan `policy` jobs pass on `main`. Infra Plan `plan` runs when `AWS_PLAN_ROLE_ARN` is set but fails against AWS until real OIDC roles exist.
+
+### Implementation phase conclusion (2026-07-07)
+
+Plan 4 **code delivery** is complete on `main` (Tasks 1–10, bootstrap stack, CI workflows, runbooks, operator scripts). The **operational exit gate** — staging deploy, rollback, secret rotation, and RDS/S3 restore with bound evidence — remains **operator-blocked** until AWS credentials and DNS are configured (sections 4–5 below).
+
+**Engineering continues with Plan 5** (evidence ingestion) against local PostgreSQL and planned S3 contracts. Plan 4 row in `IMPLEMENTATION_STATUS.md` is `blocked` until operator drills complete; that does not block application-layer Plans 5–8.
 
 ---
 
@@ -99,7 +109,11 @@ Full list: `infra/terraform/bootstrap/placeholders.env.example`
 
 1. Sign in to [AWS Console](https://console.aws.amazon.com/).
 2. Open **Account** (top-right menu) and note the **12-digit account ID**.
-3. Install AWS CLI v2: [Installing AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html).
+3. Install AWS CLI v2: [Installing AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html), or run:
+
+```powershell
+powershell -File scripts/install_aws_cli.ps1
+```
 4. Configure credentials (pick one):
    - **IAM user (pilot only):** IAM → Users → Security credentials → Create access key. Run `aws configure` and enter access key, secret, region `ap-south-1`.
    - **SSO (preferred):** `aws configure sso` following your org’s IAM Identity Center setup.
@@ -200,14 +214,18 @@ identity_resource_server_identifier = "https://api.dev.example.com"
 2. Copy examples and fill real values locally (never commit):
 
 ```powershell
-copy infra\terraform\bootstrap\secrets\database-connection.example.json config\dev-database-connection.json
+copy infra\terraform\bootstrap\secrets\database-connection.example.txt config\dev-database-connection.txt
 copy infra\terraform\bootstrap\secrets\providers.example.json config\dev-providers.json
+# or:
+powershell -File scripts/seed_plan4_secret_templates.ps1 -Environment dev
 ```
+
+The database secret is a **plain connection URL** (not JSON), stored as the full `VYU_DATABASE_URL` value.
 
 3. Upload with:
 
 ```powershell
-Get-Content config\dev-database-connection.json -Raw | uv run python scripts/configure_secrets.py --environment dev --secret-id vyu/dev/database/connection --value-stdin
+Get-Content config\dev-database-connection.txt -Raw | uv run python scripts/configure_secrets.py --environment dev --secret-id vyu/dev/database/connection --value-stdin
 Get-Content config\dev-providers.json -Raw | uv run python scripts/configure_secrets.py --environment dev --secret-id vyu/dev/providers --value-stdin
 ```
 
@@ -242,6 +260,8 @@ Run from repository root after AWS CLI works.
 
 ```powershell
 powershell -File scripts/plan4_operator_checklist.ps1
+powershell -File scripts/plan4_resume.ps1 -Phase A
+# or step-by-step:
 terraform -chdir=infra/terraform/bootstrap init
 terraform -chdir=infra/terraform/bootstrap apply
 powershell -File scripts/sync_backend_hcl_from_bootstrap.ps1
@@ -289,6 +309,9 @@ Update `docs/production/IMPLEMENTATION_STATUS.md` row 4 to `complete` only after
 | Goal | Command |
 | --- | --- |
 | Check local prerequisites | `powershell -File scripts/plan4_operator_checklist.ps1` |
+| Install AWS CLI (Windows) | `powershell -File scripts/install_aws_cli.ps1` |
+| Run handoff phase | `powershell -File scripts/plan4_resume.ps1 -Phase A` |
+| Dry-run phase commands | `powershell -File scripts/plan4_resume.ps1 -Phase B -DryRun` |
 | Reset pilot tfvars/backend | `powershell -File scripts/bootstrap_aws_placeholders.ps1` |
 | Reset placeholder GitHub vars | `powershell -File scripts/setup_github_ci_placeholders.ps1` |
 | Infra policy tests | `uv run pytest tests/infra -q` |

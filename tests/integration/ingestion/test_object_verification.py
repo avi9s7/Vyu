@@ -47,7 +47,7 @@ class VerificationFixture:
 def verification_fixture(postgres_urls: dict[str, str]) -> VerificationFixture:
     scope = TenantScope(tenant_id=uuid4(), workspace_id=uuid4())
     factory = build_session_factory(
-        build_engine(DatabaseSettings(database_url=postgres_urls["migration"]))
+        build_engine(DatabaseSettings(database_url=postgres_urls["app"]))
     )
     store = RecordingQuarantineObjectStore(
         bucket="vyu-test-quarantine",
@@ -308,7 +308,7 @@ def test_verify_streams_large_object_without_metadata_checksum(
 ) -> None:
     scope = TenantScope(tenant_id=uuid4(), workspace_id=uuid4())
     factory = build_session_factory(
-        build_engine(DatabaseSettings(database_url=postgres_urls["migration"]))
+        build_engine(DatabaseSettings(database_url=postgres_urls["app"]))
     )
     store = RecordingQuarantineObjectStore(
         bucket="vyu-test-quarantine",

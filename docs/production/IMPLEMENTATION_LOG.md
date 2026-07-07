@@ -820,6 +820,27 @@ uv run python scripts/validate_ingestion_staging.py `
 
 ---
 
+### 2026-07-08 — Plan 7 Task 2: model synthesis persistence (commit pending)
+
+**Goal:** Persist model policy versions, prompt templates, model calls, answers, claims, and citations with RLS and idempotent hashes.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| Migration | `src/vyu/migrations/versions/0009_model_synthesis.py` |
+| Models | `src/vyu/synthesis/models.py` |
+| Repository | `src/vyu/synthesis/repository.py` |
+| Tests | `tests/unit/synthesis/`, `tests/integration/synthesis/` |
+
+**Verification:**
+
+```powershell
+uv run python scripts/verify.py --scope backend
+```
+
+---
+
 ### 2026-07-08 — Plan 7 Task 1: provider-neutral gateway contracts (commit pending)
 
 **Goal:** Define immutable model/embedding gateway contracts, error taxonomy, and validation-before-call routing with fake adapter tests.

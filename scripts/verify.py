@@ -40,6 +40,7 @@ def commands_for_scope(scope: Scope, *, npm: str) -> list[Command]:
                 "tests/integration/connectors",
                 "tests/integration/research",
                 "tests/integration/retrieval",
+                "tests/integration/synthesis",
                 "-q",
             ),
         ),

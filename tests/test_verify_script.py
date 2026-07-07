@@ -46,6 +46,7 @@ class VerifyScriptTests(unittest.TestCase):
                         "tests/integration/connectors",
                         "tests/integration/research",
                         "tests/integration/retrieval",
+                        "tests/integration/synthesis",
                         "-q",
                     ),
                 ),

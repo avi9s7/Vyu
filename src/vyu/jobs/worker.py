@@ -19,6 +19,7 @@ from src.vyu.jobs.models import Job
 from src.vyu.ingestion.handler import IngestionVerifyHandler
 from src.vyu.ingestion.service import IngestionService
 from src.vyu.ingestion.settings import IngestionSettings
+from src.vyu.research.executor import ResearchRunExecutor, ResearchRunHandler
 from src.vyu.jobs.queue import QueueMessage, ReceivedQueueMessage, SqsConsumer
 from src.vyu.jobs.repository import JobRepository, TERMINAL_STATUSES
 
@@ -238,10 +239,12 @@ class WorkerRunner:
 def build_default_handlers(
     *,
     ingestion_service: IngestionService | None = None,
+    research_executor: ResearchRunExecutor | None = None,
 ) -> dict[str, JobHandler]:
     ingestion = ingestion_service or IngestionService.from_settings(IngestionSettings())
+    research = research_executor or ResearchRunExecutor()
     return {
-        "research.run": ResearchRunStubHandler(),
+        "research.run": ResearchRunHandler(research),
         "ingestion.verify": IngestionVerifyHandler(ingestion),
     }
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Mapping
 
 from src.vyu.connectors import ConnectorResult, SearchRequest, SourceConnector
@@ -14,8 +15,16 @@ from src.vyu.research_mcp.contracts import (
     connector_result_to_json,
 )
 from src.vyu.research_mcp.hashing import stable_hash, short_hash
+from src.vyu.research_mcp.protocols import ReplayStore, ToolCallAuditSink
 from src.vyu.research_mcp.registry import ResearchToolRegistry
 from src.vyu.sources import SourceRegistry
+
+
+class ResearchRunCancelled(Exception):
+    """Raised when a governed research run is cancelled mid-execution."""
+
+
+CompletedToolCallLookup = Callable[[str], tuple[ToolCallAuditRecord, ToolCallReplayRecord] | None]
 
 
 class GovernedResearchMCP:
@@ -23,15 +32,19 @@ class GovernedResearchMCP:
         self,
         tool_registry: ResearchToolRegistry,
         source_registry: SourceRegistry,
-        audit_sink: JsonlToolCallAuditSink | None = None,
-        replay_store: JsonlReplayStore | None = None,
+        audit_sink: ToolCallAuditSink | JsonlToolCallAuditSink | None = None,
+        replay_store: ReplayStore | JsonlReplayStore | None = None,
         connector_runtime: ConnectorRuntime | None = None,
+        is_cancelled: Callable[[], bool] | None = None,
+        lookup_completed: CompletedToolCallLookup | None = None,
     ):
         self.tool_registry = tool_registry
         self.source_registry = source_registry
         self.audit_sink = audit_sink
         self.replay_store = replay_store
         self.connector_runtime = connector_runtime
+        self.is_cancelled = is_cancelled
+        self.lookup_completed = lookup_completed
 
     def execute_plan(
         self,
@@ -43,6 +56,7 @@ class GovernedResearchMCP:
         audit_records: list[ToolCallAuditRecord] = []
 
         for index, step in enumerate(plan.steps, start=1):
+            self._raise_if_cancelled()
             tool = self.tool_registry.require_approved(
                 step.tool_id,
                 source_registry=self.source_registry,
@@ -73,11 +87,22 @@ class GovernedResearchMCP:
 
             result: ConnectorResult
             replayed = False
-            replay_record = self.replay_store.get(request_hash) if replay and self.replay_store is not None else None
-            if replay_record is not None:
-                result = connector_result_from_json(replay_record.result_payload)
+            completed = self.lookup_completed(request_hash) if self.lookup_completed is not None else None
+            replay_record = (
+                completed[1]
+                if completed is not None
+                else (
+                    self.replay_store.get(request_hash)
+                    if replay and self.replay_store is not None
+                    else None
+                )
+            )
+            if completed is not None or replay_record is not None:
+                selected_replay = completed[1] if completed is not None else replay_record
+                assert selected_replay is not None
+                result = connector_result_from_json(selected_replay.result_payload)
                 recalculated_hash = stable_hash(connector_result_to_json(result))
-                if recalculated_hash != replay_record.result_hash:
+                if recalculated_hash != selected_replay.result_hash:
                     record = self._audit_record(
                         index=index,
                         plan=plan,
@@ -93,7 +118,7 @@ class GovernedResearchMCP:
                     self._append_audit(record)
                     audit_records.append(record)
                     raise ValueError("Replay record result hash does not match its stored result payload.")
-                result_hash = replay_record.result_hash
+                result_hash = selected_replay.result_hash
                 replayed = True
             else:
                 try:
@@ -155,6 +180,7 @@ class GovernedResearchMCP:
                     self._append_audit(record)
                     audit_records.append(record)
                     raise
+                self._raise_if_cancelled()
                 result_payload = connector_result_to_json(result)
                 result_hash = stable_hash(result_payload)
                 if self.replay_store is not None:
@@ -226,3 +252,7 @@ class GovernedResearchMCP:
     def _append_audit(self, record: ToolCallAuditRecord) -> None:
         if self.audit_sink is not None:
             self.audit_sink.append(record)
+
+    def _raise_if_cancelled(self) -> None:
+        if self.is_cancelled is not None and self.is_cancelled():
+            raise ResearchRunCancelled("Research run cancelled.")

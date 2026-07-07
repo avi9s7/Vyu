@@ -44,6 +44,7 @@ class VerifyScriptTests(unittest.TestCase):
                         "tests/integration/ingestion",
                         "tests/integration/policy",
                         "tests/integration/connectors",
+                        "tests/integration/research",
                         "-q",
                     ),
                 ),

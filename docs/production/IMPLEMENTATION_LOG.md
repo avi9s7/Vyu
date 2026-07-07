@@ -820,7 +820,31 @@ uv run python scripts/validate_ingestion_staging.py `
 
 ---
 
-### 2026-07-07 — Plan 6 Task 3: production PubMed search/fetch (commit pending)
+### 2026-07-07 — Plan 6 Task 4: research worker integration (commit pending)
+
+**Goal:** Register the production `research.run` worker handler with persisted plans, tool calls, replay, and run events.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| Migration | `src/vyu/migrations/versions/0007_research_execution.py` |
+| Executor | `src/vyu/research/executor.py` |
+| Repository | `src/vyu/research/repository.py` |
+| MCP persistence | `src/vyu/research_mcp/persistence.py` |
+| Worker | `src/vyu/jobs/worker.py` |
+| Tests | `tests/test_research_worker_handler.py`, `tests/integration/research/` |
+
+**Verification:**
+
+```powershell
+uv run python -m unittest tests.test_research_worker_handler -v
+uv run python scripts/verify.py --scope backend
+```
+
+---
+
+### 2026-07-07 — Plan 6 Task 3: production PubMed search/fetch (`186d3668`)
 
 **Goal:** Complete production PubMed search/fetch with normalization hashes, retraction policy, replay fixtures, and staging probe.
 

@@ -12,7 +12,7 @@ from src.vyu.api.settings import ApiSettings
 
 def export_openapi(output: Path) -> dict[str, object]:
     app = create_app(
-        settings_override=ApiSettings(env="local", expected_migration_revision="0003"),
+        settings_override=ApiSettings(env="local", expected_migration_revision="0004"),
         engine_override=create_engine("sqlite+pysqlite:///:memory:"),
         schema_revision_override="0003",
     )

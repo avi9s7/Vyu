@@ -148,10 +148,10 @@ def build_auth_test_client(
         role=role,
     )
     app = create_app(
-        settings_override=ApiSettings(env="test", expected_migration_revision="0003"),
+        settings_override=ApiSettings(env="test", expected_migration_revision="0004"),
         database_settings_override=app_settings,
         auth_settings_override=auth_settings,
-        schema_revision_override="0003",
+        schema_revision_override="0004",
     )
     client = TestClient(app, raise_server_exceptions=False)
     return AuthTestContext(

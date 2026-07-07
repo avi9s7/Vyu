@@ -17,12 +17,12 @@ def client() -> TestClient:
         git_sha="testsha123",
         env="test",
         image_digest="sha256:abc",
-        expected_migration_revision="0003",
+        expected_migration_revision="0004",
     )
     app = create_app(
         settings_override=settings,
         engine_override=engine,
-        schema_revision_override="0003",
+        schema_revision_override="0004",
     )
     return TestClient(app, raise_server_exceptions=False)
 
@@ -44,7 +44,7 @@ def test_ready_health_dependency_unavailable(client: TestClient) -> None:
     engine = create_engine("sqlite+pysqlite:///:memory:")
     app = create_app(
         engine_override=engine,
-        schema_revision_override="0003",
+        schema_revision_override="0004",
     )
     test_client = TestClient(app, raise_server_exceptions=False)
     with patch.object(engine, "connect", side_effect=OSError("database unavailable")):

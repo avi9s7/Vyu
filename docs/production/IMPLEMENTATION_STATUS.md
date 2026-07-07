@@ -1,6 +1,6 @@
 # VYU Production Implementation Status
 
-Last verified Git SHA: pending Plan 5 Task 1  
+Last verified Git SHA: pending Plan 5 Task 2  
 Last verified date: 2026-07-07  
 Overall state: development POC  
 
@@ -16,7 +16,7 @@ Detailed build history, decisions, and CI fixes: [`IMPLEMENTATION_LOG.md`](IMPLE
 | 2 | PostgreSQL persistence and tenancy | complete | avi9s7 | https://github.com/avi9s7/Vyu/pull/2 | Plan 1 complete | Merge SHA `ff3b90e6`; Alembic revision `0002`; CI backend+frontend success on run https://github.com/avi9s7/Vyu/actions/runs/28745481470; PostgreSQL RLS integration tests in `tests/integration/db/test_tenant_rls.py` | none |
 | 3 | FastAPI application and job platform | complete | avi9s7 | https://github.com/avi9s7/Vyu/pull/3 | Plan 2 complete | Merge SHA `76f1c178`; CI [run 28771967025](https://github.com/avi9s7/Vyu/actions/runs/28771967025) backend+frontend+platform success | none |
 | 4 | AWS infrastructure and deployment | blocked | avi9s7 | https://github.com/avi9s7/Vyu/pull/6 | Plans 1-3 complete | **Code delivery complete:** Tasks 1–10 on `main` (`2716df3e`–`6a9c0662`); 86 infra policy tests; bootstrap stack; CI workflows; runbooks; `PLAN4_OPERATOR_HANDOFF.md` | **Operator exit gate:** AWS bootstrap apply; staging deploy/smoke/rollback/rotation/restore drills |
-| 5 | Evidence ingestion | in_progress | avi9s7 | branch `cursor/plan-5-task-1` | Plan 4 code delivery; Plans 1–3 complete | Task 1: Alembic `0004` ingestion schema + state machine tests | Plan 4 staging (for S3 live integration later) |
+| 5 | Evidence ingestion | in_progress | avi9s7 | https://github.com/avi9s7/Vyu/pull/7 | Plan 4 code delivery; Plans 1–3 complete | Tasks 1–2: Alembic `0004` schema; `POST /v1/uploads/presign` quarantine uploads | Plan 4 staging (for S3 live integration later) |
 | 6 | Governed connectors and retrieval | not_started | unassigned | none | none | none | Plan 5 incomplete |
 | 7 | Model gateway and grounded synthesis | not_started | unassigned | none | none | none | Plans 5-6 incomplete |
 | 8 | Governance, review, and exports | not_started | unassigned | none | none | none | Plans 5-7 incomplete |

@@ -14,5 +14,5 @@ class ApiSettings(BaseSettings):
     env: str = "local"
     git_sha: str = "unknown"
     image_digest: str | None = None
-    expected_migration_revision: str = "0003"
+    expected_migration_revision: str = "0004"
     service_name: str = "vyu-api"

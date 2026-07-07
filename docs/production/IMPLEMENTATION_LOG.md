@@ -570,7 +570,7 @@ powershell -File scripts/setup_github_environment_reviewers.ps1
 
 **Decision:** Plan 4 row set to `blocked` (not `complete`). All Tasks 1–10 code, CI, runbooks, bootstrap, and operator handoff are on `main`. Operational exit gate (staging deploy, rollback, rotation, restore) deferred to `PLAN4_OPERATOR_HANDOFF.md`. Engineering proceeds to Plan 5.
 
-### 2026-07-07 — Plan 5 Task 1: governed evidence ingestion schema (commit pending)
+### 2026-07-07 — Plan 5 Task 1: governed evidence ingestion schema (commits `b2c93c33`, `91d11c23`)
 
 **Goal:** Alembic `0004` tables for documents, versions, evidence objects, chunks, ingestion events; tenant/workspace RLS; document status state machine.
 
@@ -582,6 +582,34 @@ powershell -File scripts/setup_github_environment_reviewers.ps1
 uv run pytest tests/unit/ingestion/test_state_machine.py -q
 uv run pytest tests/integration/ingestion/test_migration.py -q
 ```
+
+### 2026-07-07 — Plan 5 Task 2: presigned quarantine uploads (commit pending)
+
+**Goal:** `POST /v1/uploads/presign` creates document/version/job/outbox/audit/ingestion_event rows before returning S3 POST fields; validates filename, media type, size, SHA-256, approved source, and `contains_phi=false`.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| Settings / validation | `src/vyu/ingestion/{settings,validation}.py` |
+| Object store | `src/vyu/ingestion/object_store.py` |
+| Service / models | `src/vyu/ingestion/{models,service}.py` |
+| API | `src/vyu/api/{routers/uploads.py,schemas/uploads.py}`, `app.py` |
+| Authz | `src/vyu/authz/__init__.py` — `Action.UPLOAD_DOCUMENT` |
+| Registry | `config/source_registry.example.json` — `internal_documents` |
+| Tests | `tests/unit/ingestion/test_{validation,object_store}.py`, `tests/api/test_upload_routes.py` |
+
+**Quarantine key:** `{env}/{tenant_id}/{workspace_id}/quarantine/{document_id}/{version_id}/{sanitized_filename}`
+
+**Verification:**
+
+```powershell
+uv run pytest tests/unit/ingestion -q
+uv run pytest tests/api/test_upload_routes.py -q
+uv run ruff check src/vyu/ingestion src/vyu/api/routers/uploads.py
+```
+
+**Remaining (Tasks 3–8):** object verification worker, malware/PHI screening, parsers, chunking, evidence APIs, operator runbooks.
 
 ---
 

@@ -71,6 +71,31 @@
       "source_id": "pubmed",
       "source_type": "public_literature",
       "update_cadence": "daily"
+    },
+    {
+      "access_policy": "all_approved_workspaces",
+      "allowed_uses": [
+        "document_upload",
+        "literature_search"
+      ],
+      "approval_status": "approved",
+      "approved_at": "2026-06-13T00:00:00Z",
+      "approved_by": "production-review-board",
+      "attribution_required": false,
+      "connector_config_ref": "connectors.internal_documents",
+      "display_name": "Internal Documents",
+      "forbidden_uses": [
+        "clinical_decision_support",
+        "patient_specific_recommendation"
+      ],
+      "license_or_terms": "Tenant-approved non-PHI uploads",
+      "owner": "Vyu",
+      "phi_pii_status": "none",
+      "rate_limit_policy": "tenant-default",
+      "retention_policy": "retain while source remains approved",
+      "source_id": "internal_documents",
+      "source_type": "tenant_documents",
+      "update_cadence": "on_upload"
     }
   ]
 }

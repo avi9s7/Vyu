@@ -10,7 +10,7 @@ from src.vyu.api.settings import ApiSettings
 from src.vyu.auth.resolver import apply_principal_scope
 from src.vyu.auth.settings import AuthSettings
 from src.vyu.db.settings import DatabaseSettings
-from src.vyu.ingestion.object_store import RecordingQuarantineObjectStore
+from src.vyu.ingestion.object_store import RecordingEvidenceObjectStore, RecordingQuarantineObjectStore
 from src.vyu.ingestion.service import IngestionService
 from src.vyu.ingestion.settings import IngestionSettings
 from src.vyu.sources import ProductionSourceRecord, SourceRegistry
@@ -85,6 +85,10 @@ def test_presign_upload_rejects_unapproved_source(postgres_urls: dict[str, str])
         settings=settings,
         source_registry=draft_registry,
         object_store=object_store,
+        evidence_store=RecordingEvidenceObjectStore(
+            bucket=settings.evidence_bucket,
+            kms_key_id=settings.s3_kms_key_id,
+        ),
     )
     auth_settings = AuthSettings(
         env="test",
@@ -133,3 +137,37 @@ def test_cross_tenant_document_lookup_is_hidden(
             workspace_id=other_context.workspace_id,
         )
         assert service.get_document(session, document_id) is None
+
+
+def test_finalize_upload_marks_document_uploaded(upload_context: AuthTestContext) -> None:
+    presign = upload_context.client.post(
+        "/v1/uploads/presign",
+        headers=auth_headers(upload_context),
+        json=valid_upload_payload(),
+    )
+    assert presign.status_code == 201
+    payload = presign.json()
+
+    first = upload_context.client.post(
+        "/v1/uploads/finalize",
+        headers=auth_headers(upload_context),
+        json={
+            "document_id": payload["document_id"],
+            "version_id": payload["version_id"],
+        },
+    )
+    assert first.status_code == 200
+    first_body = first.json()
+    assert first_body["status"] == "uploaded"
+    assert first_body["idempotent"] is False
+
+    second = upload_context.client.post(
+        "/v1/uploads/finalize",
+        headers=auth_headers(upload_context),
+        json={
+            "document_id": payload["document_id"],
+            "version_id": payload["version_id"],
+        },
+    )
+    assert second.status_code == 200
+    assert second.json()["idempotent"] is True

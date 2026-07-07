@@ -15,7 +15,7 @@ from src.vyu.db.settings import DatabaseSettings
 from src.vyu.ingestion.contracts import DocumentStatus
 from src.vyu.ingestion.handler import IngestionVerifyHandler
 from src.vyu.ingestion.models import Document, IngestionEvent
-from src.vyu.ingestion.object_store import QuarantineObjectRef, RecordingQuarantineObjectStore
+from src.vyu.ingestion.object_store import QuarantineObjectRef, RecordingEvidenceObjectStore, RecordingQuarantineObjectStore
 from src.vyu.ingestion.service import IngestionService, IngestionVerifyResult
 from src.vyu.ingestion.settings import IngestionSettings, MAX_UPLOAD_BYTES
 from src.vyu.jobs.contracts import JobRecord
@@ -29,6 +29,7 @@ from src.vyu.jobs.worker import (
 )
 from src.vyu.sources import ProductionSourceRecord, SourceRegistry
 from tests.api.support import seed_active_membership
+from tests.fixtures.ingestion.builders import PUBLIC_ARTICLE_TEXT
 
 
 @dataclass
@@ -44,24 +45,32 @@ class VerificationFixture:
     job_id: UUID
 
 
+def approved_internal_documents_source() -> ProductionSourceRecord:
+    return ProductionSourceRecord(
+        source_id="internal_documents",
+        display_name="Internal Documents",
+        source_type="tenant_documents",
+        owner="Vyu",
+        license_or_terms="test",
+        allowed_uses=["document_upload"],
+        access_policy="all_approved_workspaces",
+        approval_status="approved",
+        approved_by="production-review-board",
+        approved_at="2026-06-13T00:00:00Z",
+    )
+
+
 def _build_service(store: RecordingQuarantineObjectStore) -> IngestionService:
-    registry = SourceRegistry(
-        [
-            ProductionSourceRecord(
-                source_id="internal_documents",
-                display_name="Internal Documents",
-                source_type="tenant_documents",
-                owner="Vyu",
-                license_or_terms="test",
-                allowed_uses=["document_upload"],
-                approval_status="approved",
-            )
-        ]
+    registry = SourceRegistry([approved_internal_documents_source()])
+    evidence_store = RecordingEvidenceObjectStore(
+        bucket="vyu-test-evidence",
+        kms_key_id="arn:aws:kms:ap-south-1:123456789012:key/00000000-0000-0000-0000-000000000000",
     )
     return IngestionService(
-        settings=IngestionSettings(env="test"),
+        settings=IngestionSettings(env="test", use_isolated_parser=False),
         source_registry=registry,
         object_store=store,
+        evidence_store=evidence_store,
     )
 
 
@@ -117,7 +126,9 @@ def verification_fixture(postgres_urls: dict[str, str]) -> VerificationFixture:
         service=service,
         store=store,
         principal=principal,
-        body_bytes=b"%PDF-1.4 valid upload fixture",
+        body_bytes=PUBLIC_ARTICLE_TEXT.encode("utf-8"),
+        filename="report.txt",
+        media_type="text/plain",
     )
 
 
@@ -129,8 +140,8 @@ def _seed_upload(
     store: RecordingQuarantineObjectStore,
     principal: RequestPrincipal,
     body_bytes: bytes,
-    filename: str = "report.pdf",
-    media_type: str = "application/pdf",
+    filename: str = "report.txt",
+    media_type: str = "text/plain",
 ) -> VerificationFixture:
     sha256 = hashlib.sha256(body_bytes).hexdigest()
     request = PresignUploadRequest(
@@ -235,16 +246,16 @@ def _document_status(fixture: VerificationFixture) -> str:
 
 def test_verify_valid_object(verification_fixture: VerificationFixture) -> None:
     fixture = verification_fixture
-    fixture.store.seed_object(fixture.ref, b"%PDF-1.4 valid upload fixture")
+    fixture.store.seed_object(fixture.ref, PUBLIC_ARTICLE_TEXT.encode("utf-8"))
     _finalize(fixture)
 
     result = _run_verify(fixture)
 
     assert result.outcome == "complete"
     assert result.result is not None
-    assert result.result["code"] == "object_verified"
-    assert _document_status(fixture) == DocumentStatus.SCANNING.value
-    assert _event_count(fixture, "object_verified") == 1
+    assert result.result["code"] == "ready"
+    assert _document_status(fixture) == DocumentStatus.READY.value
+    assert _event_count(fixture, "ready") == 1
 
 
 def test_verify_missing_object_blocks_document(verification_fixture: VerificationFixture) -> None:
@@ -263,7 +274,7 @@ def test_verify_metadata_spoof_blocks_document(verification_fixture: Verificatio
     fixture = verification_fixture
     fixture.store.seed_object(
         fixture.ref,
-        b"%PDF-1.4 valid upload fixture",
+        PUBLIC_ARTICLE_TEXT.encode("utf-8"),
         metadata_overrides={"tenant-id": str(uuid4())},
     )
     _finalize(fixture)
@@ -278,7 +289,7 @@ def test_verify_metadata_spoof_blocks_document(verification_fixture: Verificatio
 
 def test_verify_checksum_mismatch_blocks_document(verification_fixture: VerificationFixture) -> None:
     fixture = verification_fixture
-    original = b"%PDF-1.4 valid upload fixture"
+    original = PUBLIC_ARTICLE_TEXT.encode("utf-8")
     tampered = original[:-1] + b"X"
     fixture.store.seed_object(
         fixture.ref,
@@ -306,22 +317,22 @@ def test_duplicate_finalize_is_idempotent(verification_fixture: VerificationFixt
 
 def test_duplicate_verify_does_not_repeat_scan(verification_fixture: VerificationFixture) -> None:
     fixture = verification_fixture
-    fixture.store.seed_object(fixture.ref, b"%PDF-1.4 valid upload fixture")
+    fixture.store.seed_object(fixture.ref, PUBLIC_ARTICLE_TEXT.encode("utf-8"))
     _finalize(fixture)
 
     first = _run_verify(fixture)
     second = _run_verify(fixture)
 
     assert first.result is not None
-    assert first.result["code"] == "object_verified"
+    assert first.result["code"] == "ready"
     assert second.result is not None
     assert second.result.get("idempotent") is True
-    assert _event_count(fixture, "object_verified") == 1
+    assert _event_count(fixture, "ready") == 1
 
 
 def test_verify_before_finalize_retries(verification_fixture: VerificationFixture) -> None:
     fixture = verification_fixture
-    fixture.store.seed_object(fixture.ref, b"%PDF-1.4 valid upload fixture")
+    fixture.store.seed_object(fixture.ref, PUBLIC_ARTICLE_TEXT.encode("utf-8"))
 
     result = _run_verify(fixture)
 
@@ -366,8 +377,8 @@ def test_verify_streams_large_object_without_metadata_checksum(
         store=store,
         principal=principal,
         body_bytes=body_bytes,
-        filename="large.bin",
-        media_type="application/octet-stream",
+        filename="large.txt",
+        media_type="text/plain",
     )
     fixture.store.seed_object(
         fixture.ref,
@@ -386,14 +397,14 @@ def test_verify_streams_large_object_without_metadata_checksum(
 
     assert result.outcome == "complete"
     assert result.result is not None
-    assert result.result["code"] == "object_verified"
+    assert result.result["code"] == "ready"
     assert heartbeats >= 1
-    assert _document_status(fixture) == DocumentStatus.SCANNING.value
+    assert _document_status(fixture) == DocumentStatus.READY.value
 
 
 def test_worker_processes_ingestion_verify_job(verification_fixture: VerificationFixture) -> None:
     fixture = verification_fixture
-    fixture.store.seed_object(fixture.ref, b"%PDF-1.4 valid upload fixture")
+    fixture.store.seed_object(fixture.ref, PUBLIC_ARTICLE_TEXT.encode("utf-8"))
     _finalize(fixture)
     worker = JobWorker(
         repository=JobRepository(),
@@ -405,5 +416,5 @@ def test_worker_processes_ingestion_verify_job(verification_fixture: Verificatio
         assert job_row is not None
         disposition = worker.process_queue_message(message_from_job(job_row), session)
     assert disposition == MessageDisposition.ACK
-    assert _document_status(fixture) == DocumentStatus.SCANNING.value
-    assert _event_count(fixture, "object_verified") == 1
+    assert _document_status(fixture) == DocumentStatus.READY.value
+    assert _event_count(fixture, "ready") == 1

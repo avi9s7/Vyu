@@ -33,7 +33,7 @@ These documents are sufficient for a junior developer to identify the correct wo
 | Plan 2 | Database schema/ER documentation, migration policy, tenant-governance import/runbook, RLS evidence, `IMPLEMENTATION_LOG.md` entries |
 | Plan 3 | Versioned OpenAPI, generated client contract, API error/auth/idempotency/job documentation |
 | Plan 4 | Terraform environment README files, deployment/rollback/rotation/restore runbooks, architecture outputs, `PLAN4_OPERATOR_HANDOFF.md` |
-| Plan 5 | Ingestion/file-format policy, quarantine/scan/reprocess/deletion runbook, parser fixture inventory |
+| Plan 5 | Ingestion/file-format policy, quarantine/scan/reprocess/deletion runbook (`docs/production/runbooks/ingestion.md`), parser fixture inventory |
 | Plan 6 | Source approval records, connector replay inventory, index manifest schema, retrieval evaluation reports |
 | Plan 7 | Model-provider capability matrix, prompt/model policy registry, model/synthesis evaluation reports |
 | Plan 8 | Methodology/governance policy docs, reviewer guide, report specification, audit reconstruction procedure |

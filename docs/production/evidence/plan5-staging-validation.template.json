@@ -1,0 +1,57 @@
+{
+  "plan": 5,
+  "title": "Evidence ingestion staging validation",
+  "environment": "staging",
+  "git_sha": "",
+  "operator": "",
+  "started_at_utc": "",
+  "completed_at_utc": "",
+  "base_url": "https://api.staging.example.com",
+  "validation_command": "uv run python scripts/validate_ingestion_staging.py --environment staging --base-url https://api.staging.example.com --output evidence/plan5-staging-validation.json",
+  "runbook_exercised": false,
+  "alarms_verified": false,
+  "status": "pending",
+  "checks": [
+    {
+      "name": "clean_txt_ready",
+      "passed": false,
+      "detail": ""
+    },
+    {
+      "name": "clean_pdf_ready",
+      "passed": false,
+      "detail": ""
+    },
+    {
+      "name": "clean_docx_ready",
+      "passed": false,
+      "detail": ""
+    },
+    {
+      "name": "clean_html_ready",
+      "passed": false,
+      "detail": ""
+    },
+    {
+      "name": "eicar_malware_blocked",
+      "passed": false,
+      "detail": ""
+    },
+    {
+      "name": "synthetic_phi_blocked",
+      "passed": false,
+      "detail": ""
+    },
+    {
+      "name": "duplicate_exact_reuse",
+      "passed": false,
+      "detail": ""
+    },
+    {
+      "name": "presign_kms_required",
+      "passed": false,
+      "detail": ""
+    }
+  ],
+  "notes": "Populate after operator-run staging exercise. CI integration evidence lives in tests/integration/ingestion/test_staging_validation.py."
+}

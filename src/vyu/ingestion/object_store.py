@@ -10,9 +10,8 @@ from uuid import UUID
 from src.vyu.ingestion.validation import sanitize_filename
 
 
-VERIFY_TERMINAL_CODES = frozenset(
+VERIFY_BLOCK_CODES = frozenset(
     {
-        "object_verified",
         "object_missing",
         "size_mismatch",
         "checksum_mismatch",
@@ -21,6 +20,45 @@ VERIFY_TERMINAL_CODES = frozenset(
         "content_type_mismatch",
     }
 )
+
+SCREENING_TERMINAL_CODES = frozenset(
+    {
+        "screening_passed",
+        "malware_infected",
+        "malware_error",
+        "malware_unknown",
+        "phi_suspected_phi",
+        "phi_unknown",
+    }
+)
+
+PARSER_BLOCK_CODES = frozenset(
+    {
+        "parser_encrypted_pdf",
+        "parser_macro_enabled_office",
+        "parser_embedded_executable",
+        "parser_malformed_archive",
+        "parser_excessive_compression_ratio",
+        "parser_excessive_page_count",
+        "parser_timeout",
+        "parser_unsupported_format",
+        "parser_malformed_document",
+        "parser_invalid_encoding",
+    }
+)
+
+PARSING_TERMINAL_CODES = frozenset({"parsing_passed"}) | PARSER_BLOCK_CODES
+
+CHUNKING_BLOCK_CODES = frozenset(
+    {
+        "promotion_failed",
+        "normalization_failed",
+    }
+)
+
+CHUNKING_TERMINAL_CODES = frozenset({"ready", "duplicate_exact"}) | CHUNKING_BLOCK_CODES
+
+VERIFY_TERMINAL_CODES = VERIFY_BLOCK_CODES | {"object_verified"}
 
 
 class ObjectNotFoundError(Exception):
@@ -99,6 +137,185 @@ def build_quarantine_key(
         f"{env}/{tenant_id}/{workspace_id}/quarantine/"
         f"{document_id}/{version_id}/{safe_name}"
     )
+
+
+def build_evidence_original_key(
+    *,
+    env: str,
+    tenant_id: UUID,
+    workspace_id: UUID,
+    document_id: UUID,
+    version_id: UUID,
+    filename: str,
+) -> str:
+    safe_name = sanitize_filename(filename)
+    return (
+        f"{env}/{tenant_id}/{workspace_id}/evidence/"
+        f"{document_id}/{version_id}/original/{safe_name}"
+    )
+
+
+def build_evidence_normalized_key(
+    *,
+    env: str,
+    tenant_id: UUID,
+    workspace_id: UUID,
+    document_id: UUID,
+    version_id: UUID,
+) -> str:
+    return (
+        f"{env}/{tenant_id}/{workspace_id}/evidence/"
+        f"{document_id}/{version_id}/normalized/document.json"
+    )
+
+
+@dataclass(frozen=True)
+class EvidenceObjectRef:
+    bucket: str
+    key: str
+    tenant_id: UUID
+    workspace_id: UUID
+    document_id: UUID
+    version_id: UUID
+    object_type: str
+    sha256: str
+    media_type: str
+
+
+@dataclass(frozen=True)
+class StoredObjectHead:
+    bucket: str
+    key: str
+    content_length: int
+    content_type: str | None
+    server_side_encryption: str | None
+    ssekms_key_id: str | None
+    metadata: dict[str, str]
+    checksum_sha256: str | None = None
+
+
+class EvidenceObjectStore(Protocol):
+    def put_object(
+        self,
+        ref: EvidenceObjectRef,
+        body: bytes,
+        *,
+        metadata: dict[str, str] | None = None,
+    ) -> str: ...
+
+    def copy_from_quarantine(
+        self,
+        source: QuarantineObjectRef,
+        dest: EvidenceObjectRef,
+        *,
+        quarantine_store: QuarantineObjectStore,
+    ) -> str: ...
+
+    def head_object(self, ref: EvidenceObjectRef) -> StoredObjectHead | None: ...
+
+    def iter_object_chunks(
+        self,
+        ref: EvidenceObjectRef,
+        *,
+        chunk_size: int = 1024 * 1024,
+    ) -> Iterator[bytes]: ...
+
+
+@dataclass
+class StoredEvidenceObject:
+    ref: EvidenceObjectRef
+    body: bytes
+    content_type: str | None = None
+    server_side_encryption: str | None = "aws:kms"
+    ssekms_key_id: str | None = None
+    metadata: dict[str, str] = field(default_factory=dict)
+    version_id: str = "recording-version-1"
+
+
+@dataclass
+class RecordingEvidenceObjectStore:
+    bucket: str
+    kms_key_id: str
+    stored: dict[str, StoredEvidenceObject] = field(default_factory=dict)
+    blocked_dest_keys: set[str] = field(default_factory=set)
+
+    def put_object(
+        self,
+        ref: EvidenceObjectRef,
+        body: bytes,
+        *,
+        metadata: dict[str, str] | None = None,
+    ) -> str:
+        if ref.key in self.blocked_dest_keys:
+            raise PromotionError(ref.key)
+        object_metadata = {
+            "tenant-id": str(ref.tenant_id),
+            "workspace-id": str(ref.workspace_id),
+            "document-id": str(ref.document_id),
+            "version-id": str(ref.version_id),
+            "sha256": ref.sha256,
+            "object-type": ref.object_type,
+        }
+        if metadata:
+            object_metadata.update(metadata)
+        version_id = f"recording-version-{len(self.stored) + 1}"
+        self.stored[ref.key] = StoredEvidenceObject(
+            ref=ref,
+            body=body,
+            content_type=ref.media_type,
+            server_side_encryption="aws:kms",
+            ssekms_key_id=self.kms_key_id,
+            metadata=object_metadata,
+            version_id=version_id,
+        )
+        return version_id
+
+    def copy_from_quarantine(
+        self,
+        source: QuarantineObjectRef,
+        dest: EvidenceObjectRef,
+        *,
+        quarantine_store: QuarantineObjectStore,
+    ) -> str:
+        if dest.key in self.blocked_dest_keys:
+            raise PromotionError(dest.key)
+        body = b"".join(quarantine_store.iter_object_chunks(source))
+        if hashlib.sha256(body).hexdigest() != dest.sha256:
+            raise PromotionError(dest.key)
+        return self.put_object(dest, body)
+
+    def head_object(self, ref: EvidenceObjectRef) -> StoredObjectHead | None:
+        stored = self.stored.get(ref.key)
+        if stored is None:
+            return None
+        checksum = metadata_value(stored.metadata, "sha256")
+        return StoredObjectHead(
+            bucket=ref.bucket,
+            key=ref.key,
+            content_length=len(stored.body),
+            content_type=stored.content_type,
+            server_side_encryption=stored.server_side_encryption,
+            ssekms_key_id=stored.ssekms_key_id,
+            metadata=dict(stored.metadata),
+            checksum_sha256=checksum,
+        )
+
+    def iter_object_chunks(
+        self,
+        ref: EvidenceObjectRef,
+        *,
+        chunk_size: int = 1024 * 1024,
+    ) -> Iterator[bytes]:
+        stored = self.stored.get(ref.key)
+        if stored is None:
+            raise ObjectNotFoundError(ref.key)
+        for offset in range(0, len(stored.body), chunk_size):
+            yield stored.body[offset : offset + chunk_size]
+
+
+class PromotionError(Exception):
+    """Raised when quarantine promotion to evidence storage fails."""
+
 
 
 def default_scope_metadata(ref: QuarantineObjectRef) -> dict[str, str]:

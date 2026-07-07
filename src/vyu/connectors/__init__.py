@@ -4,7 +4,7 @@ from src.vyu.connectors.contracts import (
     SearchRequest,
     SourceConnector,
 )
-from src.vyu.connectors.audit import JsonlAuditSink
+from src.vyu.connectors.audit import JsonlAuditSink, JsonlTransportAuditSink, TransportAuditRecord
 from src.vyu.connectors.dummy import DummyConnector
 from src.vyu.connectors.pubmed import PubMedConnector
 from src.vyu.connectors.pubmed_live import PubMedHttpTransport, PubMedReplayTransport

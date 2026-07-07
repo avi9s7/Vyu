@@ -803,7 +803,7 @@ uv run python scripts/validate_ingestion_staging.py `
 
 **Follow-ups:** Plan 5 row remains `in_progress` until operator records staging JSON evidence and confirms ingestion alarms during the runbook exercise.
 
-### 2026-07-07 — Plan 6 Task 1: versioned source and tool policy (commit pending)
+### 2026-07-07 — Plan 6 Task 1: versioned source and tool policy (`9ade1b63`)
 
 **Goal:** Persist append-only source and research-tool policy versions in PostgreSQL with import command and planning gates.
 
@@ -816,11 +816,30 @@ uv run python scripts/validate_ingestion_staging.py `
 | Import | `scripts/import_source_policy.py` |
 | Tests | `tests/integration/policy/` |
 
+**Verification:** `uv run python scripts/verify.py --scope backend` — 408 tests passed.
+
+---
+
+### 2026-07-07 — Plan 6 Task 2: hardened connector runtime (commit pending)
+
+**Goal:** Replace urllib with HTTPX, add HTTP-aware retries, distributed rate limiting, transport audit hashes, and structured replay fixtures.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| HTTP client | `src/vyu/connectors/http.py` |
+| Runtime | `src/vyu/connectors/runtime.py` |
+| Rate limit | `src/vyu/connectors/rate_limit.py`, migration `0006_connector_rate_limits.py` |
+| Replay | `src/vyu/connectors/replay.py` |
+| Audit | `src/vyu/connectors/audit.py` (`TransportAuditRecord`) |
+| PubMed transport | `src/vyu/connectors/pubmed_live.py` |
+| Tests | `tests/test_connector_http.py`, `tests/integration/connectors/` |
+
 **Verification:**
 
 ```powershell
-uv run pytest tests/integration/policy -q
-uv run python scripts/import_source_policy.py --dry-run
+uv run python -m unittest tests.test_connector_http -v
 uv run python scripts/verify.py --scope backend
 ```
 

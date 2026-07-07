@@ -29,7 +29,7 @@ from src.vyu.ingestion.object_store import (
 from src.vyu.ingestion.settings import IngestionSettings
 from src.vyu.ingestion.validation import UploadValidationError, validate_upload_request
 from src.vyu.jobs.contracts import JobRecord, NewJob
-from src.vyu.jobs.models import Job, OutboxEvent
+from src.vyu.jobs.models import OutboxEvent
 from src.vyu.jobs.repository import JobRepository
 from src.vyu.sources import SourceRegistry
 
@@ -302,7 +302,7 @@ class IngestionService:
                 status_code=409,
             )
 
-        job_id = self._latest_job_id_for_version(session, document_id, version_id)
+        job_id = self._job_id_for_document(session, document_id)
         document.status = DocumentStatus.UPLOADED.value
         sequence = self._next_event_sequence(session, job_id) if job_id is not None else 2
         if job_id is not None:
@@ -509,18 +509,12 @@ class IngestionService:
         row = session.scalar(select(DocumentVersion).where(DocumentVersion.id == version_id))
         return row if isinstance(row, DocumentVersion) else None
 
-    def _latest_job_id_for_version(
-        self,
-        session: Session,
-        document_id: UUID,
-        version_id: UUID,
-    ) -> UUID | None:
-        del document_id
+    def _job_id_for_document(self, session: Session, document_id: UUID) -> UUID | None:
         row = session.scalar(
-            select(Job.id)
+            select(IngestionEvent.job_id)
             .where(
-                Job.kind == "ingestion.verify",
-                Job.payload["version_id"].as_string() == str(version_id),
+                IngestionEvent.document_id == document_id,
+                IngestionEvent.code == "presign_issued",
             )
             .limit(1)
         )

@@ -28,6 +28,7 @@ from src.vyu.jobs.worker import (
     message_from_job,
 )
 from src.vyu.sources import ProductionSourceRecord, SourceRegistry
+from tests.api.support import seed_active_membership
 
 
 @dataclass
@@ -43,18 +44,7 @@ class VerificationFixture:
     job_id: UUID
 
 
-@pytest.fixture
-def verification_fixture(postgres_urls: dict[str, str]) -> VerificationFixture:
-    scope = TenantScope(tenant_id=uuid4(), workspace_id=uuid4())
-    factory = build_session_factory(
-        build_engine(DatabaseSettings(database_url=postgres_urls["app"]))
-    )
-    store = RecordingQuarantineObjectStore(
-        bucket="vyu-test-quarantine",
-        region="ap-south-1",
-        kms_key_id="arn:aws:kms:ap-south-1:123456789012:key/00000000-0000-0000-0000-000000000000",
-        expiry_seconds=600,
-    )
+def _build_service(store: RecordingQuarantineObjectStore) -> IngestionService:
     registry = SourceRegistry(
         [
             ProductionSourceRecord(
@@ -68,29 +58,66 @@ def verification_fixture(postgres_urls: dict[str, str]) -> VerificationFixture:
             )
         ]
     )
-    service = IngestionService(
+    return IngestionService(
         settings=IngestionSettings(env="test"),
         source_registry=registry,
         object_store=store,
     )
-    principal = RequestPrincipal(
-        user_id=uuid4(),
+
+
+def _build_principal(
+    *,
+    user_id: UUID,
+    tenant_id: UUID,
+    workspace_id: UUID,
+    subject: str,
+) -> RequestPrincipal:
+    return RequestPrincipal(
+        user_id=user_id,
         issuer="https://test.vyu.invalid",
-        subject="ingestion-test-user",
+        subject=subject,
         email="ingestion@test.vyu",
-        tenant_id=scope.tenant_id,
-        workspace_id=scope.workspace_id,
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
         role="researcher",
         authentication_method="test",
     )
-    body_bytes = b"%PDF-1.4 valid upload fixture"
+
+
+@pytest.fixture
+def verification_fixture(postgres_urls: dict[str, str]) -> VerificationFixture:
+    migration_factory = build_session_factory(
+        build_engine(DatabaseSettings(database_url=postgres_urls["migration"]))
+    )
+    tenant_id, workspace_id, user_id = seed_active_membership(
+        migration_factory,
+        subject="ingestion-test-user",
+        role="researcher",
+    )
+    scope = TenantScope(tenant_id=tenant_id, workspace_id=workspace_id)
+    factory = build_session_factory(
+        build_engine(DatabaseSettings(database_url=postgres_urls["app"]))
+    )
+    store = RecordingQuarantineObjectStore(
+        bucket="vyu-test-quarantine",
+        region="ap-south-1",
+        kms_key_id="arn:aws:kms:ap-south-1:123456789012:key/00000000-0000-0000-0000-000000000000",
+        expiry_seconds=600,
+    )
+    service = _build_service(store)
+    principal = _build_principal(
+        user_id=user_id,
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        subject="ingestion-test-user",
+    )
     return _seed_upload(
         scope=scope,
         factory=factory,
         service=service,
         store=store,
         principal=principal,
-        body_bytes=body_bytes,
+        body_bytes=b"%PDF-1.4 valid upload fixture",
     )
 
 
@@ -306,7 +333,15 @@ def test_verify_before_finalize_retries(verification_fixture: VerificationFixtur
 def test_verify_streams_large_object_without_metadata_checksum(
     postgres_urls: dict[str, str],
 ) -> None:
-    scope = TenantScope(tenant_id=uuid4(), workspace_id=uuid4())
+    migration_factory = build_session_factory(
+        build_engine(DatabaseSettings(database_url=postgres_urls["migration"]))
+    )
+    tenant_id, workspace_id, user_id = seed_active_membership(
+        migration_factory,
+        subject="ingestion-large-test-user",
+        role="researcher",
+    )
+    scope = TenantScope(tenant_id=tenant_id, workspace_id=workspace_id)
     factory = build_session_factory(
         build_engine(DatabaseSettings(database_url=postgres_urls["app"]))
     )
@@ -316,33 +351,12 @@ def test_verify_streams_large_object_without_metadata_checksum(
         kms_key_id="arn:aws:kms:ap-south-1:123456789012:key/00000000-0000-0000-0000-000000000000",
         expiry_seconds=600,
     )
-    registry = SourceRegistry(
-        [
-            ProductionSourceRecord(
-                source_id="internal_documents",
-                display_name="Internal Documents",
-                source_type="tenant_documents",
-                owner="Vyu",
-                license_or_terms="test",
-                allowed_uses=["document_upload"],
-                approval_status="approved",
-            )
-        ]
-    )
-    service = IngestionService(
-        settings=IngestionSettings(env="test"),
-        source_registry=registry,
-        object_store=store,
-    )
-    principal = RequestPrincipal(
-        user_id=uuid4(),
-        issuer="https://test.vyu.invalid",
-        subject="ingestion-test-user",
-        email="ingestion@test.vyu",
-        tenant_id=scope.tenant_id,
-        workspace_id=scope.workspace_id,
-        role="researcher",
-        authentication_method="test",
+    service = _build_service(store)
+    principal = _build_principal(
+        user_id=user_id,
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        subject="ingestion-large-test-user",
     )
     body_bytes = b"x" * MAX_UPLOAD_BYTES
     fixture = _seed_upload(

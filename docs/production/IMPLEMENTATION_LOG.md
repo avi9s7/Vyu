@@ -820,6 +820,28 @@ uv run python scripts/validate_ingestion_staging.py `
 
 ---
 
+### 2026-07-08 — Plan 7 Task 5: Azure, Anthropic, and Google adapters (commit pending)
+
+**Goal:** Add provider adapters behind the same gateway contracts, map provider-specific failures into gateway errors, and publish the model provider capability matrix.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| Adapters | `src/vyu/model_gateway/adapters/{azure_openai,anthropic,google}.py` |
+| Shared | `src/vyu/model_gateway/adapters/{retry,openai_common}.py` |
+| Matrix | `docs/production/model-provider-matrix.md` |
+| Tests | `tests/unit/model_gateway/adapters/test_{azure_openai,anthropic,google}.py` |
+
+**Verification:**
+
+```powershell
+uv run python -m unittest tests.unit.model_gateway.adapters.test_openai tests.unit.model_gateway.adapters.test_azure_openai tests.unit.model_gateway.adapters.test_anthropic tests.unit.model_gateway.adapters.test_google -v
+uv run python scripts/verify.py --scope backend
+```
+
+---
+
 ### 2026-07-08 — Plan 7 Task 4: OpenAI adapter (commit pending)
 
 **Goal:** Add OpenAI Responses API generation and Embeddings API adapters with strict structured output, normalized usage, bounded retries, and mocked contract tests.

@@ -1,3 +1,6 @@
+from src.vyu.model_gateway.adapters.anthropic import AnthropicAdapter
+from src.vyu.model_gateway.adapters.azure_openai import AzureOpenAIAdapter
+from src.vyu.model_gateway.adapters.google import GoogleAdapter
 from src.vyu.model_gateway.adapters.openai import OpenAIAdapter, supports_structured_synthesis
 from src.vyu.model_gateway.config import (
     ModelGatewayConfigError,
@@ -42,6 +45,9 @@ __all__ = [
     "AnthropicCredentials",
     "AzureOpenAICredentials",
     "GoogleCredentials",
+    "AnthropicAdapter",
+    "AzureOpenAIAdapter",
+    "GoogleAdapter",
     "ModelGatewayConfigError",
     "ModelGatewaySettings",
     "OpenAIAdapter",

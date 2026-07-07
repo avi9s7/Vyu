@@ -1,26 +1,22 @@
 from __future__ import annotations
 
+import json
 import time
 from dataclasses import dataclass, field
 from typing import Callable, TypeVar
 
-from openai import (
+from anthropic import (
     APIConnectionError,
     APITimeoutError,
+    Anthropic,
     AuthenticationError,
     BadRequestError,
     InternalServerError,
-    OpenAI,
     RateLimitError,
 )
-from openai.types.responses import Response
+from anthropic.types import Message
 
-from src.vyu.model_gateway.adapters.openai_common import (
-    normalize_openai_generation_response,
-    schema_name,
-    supports_openai_structured_synthesis,
-    utc_now_iso,
-)
+from src.vyu.model_gateway.adapters.openai_common import utc_now_iso
 from src.vyu.model_gateway.adapters.retry import AdapterRetrySettings, backoff_seconds, retry_after_from_header
 from src.vyu.model_gateway.contracts import (
     EmbeddingRequest,
@@ -32,72 +28,56 @@ from src.vyu.model_gateway.contracts import (
 )
 from src.vyu.model_gateway.errors import (
     GatewayAuthenticationError,
+    GatewayMalformedResponse,
+    GatewayPolicyBlocked,
     GatewayRateLimited,
     GatewayTimeout,
     GatewayUnavailable,
     GatewayValidationError,
 )
-from src.vyu.model_gateway.secrets import OpenAICredentials
+from src.vyu.model_gateway.secrets import AnthropicCredentials
+
+STRUCTURED_OUTPUT_MODEL_PREFIXES = (
+    "claude-opus-4",
+    "claude-sonnet-4",
+    "claude-haiku-4",
+    "claude-3-5-sonnet",
+    "claude-3-7-sonnet",
+)
 
 T = TypeVar("T")
 
 
 def supports_structured_synthesis(model_id: str) -> bool:
-    return supports_openai_structured_synthesis(model_id)
-
-
-@dataclass(frozen=True)
-class OpenAIAdapterSettings(AdapterRetrySettings):
-    pass
+    normalized = model_id.strip().lower()
+    return any(normalized.startswith(prefix) for prefix in STRUCTURED_OUTPUT_MODEL_PREFIXES)
 
 
 @dataclass
-class OpenAIAdapter:
-    """OpenAI Responses API generation and Embeddings API adapter."""
-
-    credentials: OpenAICredentials
-    provider_id: str = "openai"
-    settings: OpenAIAdapterSettings = field(default_factory=OpenAIAdapterSettings)
-    client: OpenAI | None = None
+class AnthropicAdapter:
+    credentials: AnthropicCredentials
+    provider_id: str = "anthropic"
+    settings: AdapterRetrySettings = field(default_factory=AdapterRetrySettings)
+    client: Anthropic | None = None
     sleep: Callable[[float], None] = time.sleep
     monotonic: Callable[[], float] = time.perf_counter
 
     def generate(self, request: ModelRequest) -> ModelResponse:
         if not supports_structured_synthesis(request.model_id):
             raise GatewayValidationError(
-                "OpenAI model is not approved for strict structured synthesis"
+                "Anthropic model is not approved for strict structured synthesis"
             )
 
         started = self.monotonic()
         response = self._with_retries(
-            lambda: self._create_response(request),
-            operation_name="responses.create",
+            lambda: self._create_message(request),
+            operation_name="messages.create",
         )
         latency_ms = max(int((self.monotonic() - started) * 1000), 0)
-        return normalize_openai_generation_response(request, response, latency_ms=latency_ms)
+        return _normalize_message_response(request, response, latency_ms=latency_ms)
 
     def embed(self, request: EmbeddingRequest) -> EmbeddingResponse:
-        started = self.monotonic()
-        response = self._with_retries(
-            lambda: self._client().embeddings.create(
-                model=request.model_id,
-                input=list(request.texts),
-                dimensions=request.dimensions,
-                timeout=request.timeout_seconds,
-            ),
-            operation_name="embeddings.create",
-        )
-        latency_ms = max(int((self.monotonic() - started) * 1000), 0)
-        vectors = tuple(tuple(float(value) for value in item.embedding) for item in response.data)
-        usage = response.usage
-        return EmbeddingResponse.from_vectors(
-            request=request,
-            provider_request_id=None,
-            vectors=vectors,
-            input_tokens=usage.prompt_tokens,
-            total_tokens=usage.total_tokens,
-            latency_ms=latency_ms,
-        )
+        raise GatewayValidationError("Anthropic provider does not support embeddings")
 
     def health(self) -> ProviderHealth:
         started = self.monotonic()
@@ -123,32 +103,30 @@ class OpenAIAdapter:
             safe_code=safe_code,
         )
 
-    def _create_response(self, request: ModelRequest) -> Response:
-        return self._client().responses.create(
+    def _create_message(self, request: ModelRequest) -> Message:
+        return self._client().messages.create(
             model=request.model_id,
-            instructions=request.system_instructions,
-            input=request.input,
-            max_output_tokens=request.max_output_tokens,
+            max_tokens=request.max_output_tokens,
+            system=request.system_instructions,
+            messages=[{"role": "user", "content": request.input}],
             temperature=request.temperature,
             timeout=request.timeout_seconds,
             metadata={
                 "vyu_request_id": request.request_id[:64],
                 "vyu_run_id": request.run_id[:64],
             },
-            text={
+            output_config={
                 "format": {
                     "type": "json_schema",
-                    "name": schema_name(request.prompt_template_id),
                     "schema": dict(request.output_schema),
-                    "strict": True,
                 }
             },
         )
 
-    def _client(self) -> OpenAI:
+    def _client(self) -> Anthropic:
         if self.client is not None:
             return self.client
-        return OpenAI(api_key=self.credentials.api_key)
+        return Anthropic(api_key=self.credentials.api_key)
 
     def _with_retries(self, operation: Callable[[], T], *, operation_name: str) -> T:
         attempt = 0
@@ -159,7 +137,7 @@ class OpenAIAdapter:
             except RateLimitError as exc:
                 if attempt >= self.settings.max_attempts:
                     raise GatewayRateLimited(
-                        "OpenAI rate limit exceeded",
+                        "Anthropic rate limit exceeded",
                         retry_after_seconds=retry_after_from_header(exc.response.headers),
                     ) from exc
                 delay = retry_after_from_header(exc.response.headers) or backoff_seconds(
@@ -180,6 +158,56 @@ class OpenAIAdapter:
                     raise GatewayUnavailable(f"{operation_name} unavailable") from exc
                 self.sleep(backoff_seconds(attempt, settings=self.settings))
             except AuthenticationError as exc:
-                raise GatewayAuthenticationError("OpenAI authentication failed") from exc
+                raise GatewayAuthenticationError("Anthropic authentication failed") from exc
             except BadRequestError as exc:
                 raise GatewayValidationError(f"{operation_name} rejected the request") from exc
+
+
+def _normalize_message_response(
+    request: ModelRequest,
+    response: Message,
+    *,
+    latency_ms: int,
+) -> ModelResponse:
+    if response.stop_reason == "refusal" or response.stop_details is not None:
+        raise GatewayPolicyBlocked("provider refused the request")
+    if response.stop_reason == "max_tokens":
+        raise GatewayMalformedResponse("provider returned incomplete output")
+
+    text_parts: list[str] = []
+    for block in response.content:
+        if block.type == "text":
+            text_parts.append(block.text)
+    output_text = "".join(text_parts).strip()
+    if not output_text:
+        raise GatewayMalformedResponse("provider returned empty structured output")
+
+    try:
+        output = json.loads(output_text)
+    except json.JSONDecodeError as exc:
+        raise GatewayMalformedResponse("provider returned non-json output") from exc
+    if not isinstance(output, dict):
+        raise GatewayMalformedResponse("provider structured output must be a JSON object")
+
+    usage = response.usage
+    cached_tokens = int(usage.cache_read_input_tokens or 0)
+    return ModelResponse.from_output(
+        request=request,
+        provider_request_id=response.id,
+        output=output,
+        input_tokens=usage.input_tokens,
+        output_tokens=usage.output_tokens,
+        reasoning_tokens=0,
+        cached_tokens=cached_tokens,
+        latency_ms=latency_ms,
+        finish_reason=_anthropic_finish_reason(response.stop_reason),
+        schema_valid=True,
+    )
+
+
+def _anthropic_finish_reason(stop_reason: str | None) -> str:
+    if stop_reason == "end_turn":
+        return "stop"
+    if stop_reason is None:
+        return "unknown"
+    return stop_reason

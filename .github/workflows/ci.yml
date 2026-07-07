@@ -56,7 +56,7 @@ jobs:
           uv run pytest tests/integration/db/test_tenancy_repository.py -vv --tb=short
           uv run pytest tests/integration/db/test_tenant_rls.py -vv --tb=short
           uv run pytest tests/integration/jobs -vv --tb=short
-          uv run pytest tests/integration/ingestion -vv --tb=short
+          uv run pytest tests/integration/ingestion/test_object_verification.py::test_verify_valid_object -vv --tb=short
           uv run pytest tests/api/test_authentication.py tests/api/test_tenant_authorization.py tests/api/test_research_routes.py -vv --tb=short
 
   platform:

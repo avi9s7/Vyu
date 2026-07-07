@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Protocol
 from uuid import UUID
@@ -58,11 +58,7 @@ class RecordingQuarantineObjectStore:
     kms_key_id: str
     expiry_seconds: int
     upload_url: str = "https://s3.local/quarantine"
-    posts: list[PresignedPost] | None = None
-
-    def __post_init__(self) -> None:
-        if self.posts is None:
-            self.posts = []
+    posts: list[PresignedPost] = field(default_factory=list)
 
     def create_presigned_upload(self, ref: QuarantineObjectRef) -> PresignedPost:
         conditions: list[object] = [

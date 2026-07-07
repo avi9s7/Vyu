@@ -9,6 +9,7 @@ This index distinguishes documents that are sufficient to start engineering from
 | `docs/production/JUNIOR_DEVELOPER_HANDBOOK.md` | Onboarding, terminology, safety rules, workflow, tools, and definition of done |
 | `docs/production/IMPLEMENTATION_STATUS.md` | Plan-level status, exit gates, blockers |
 | `docs/production/IMPLEMENTATION_LOG.md` | Running implementation history, decisions, CI fixes, verification commands |
+| `docs/production/PLAN4_OPERATOR_HANDOFF.md` | Plan 4 operator resume guide: implemented work, blockers, required inputs, step-by-step AWS/GitHub/DNS setup |
 | `docs/superpowers/specs/2026-07-05-vyu-production-platform-design.md` | Audited current status, approved scope, target architecture, API/data/security design, release gates |
 | `docs/superpowers/plans/README.md` | Ordered plan index and dependencies |
 | `docs/superpowers/plans/2026-07-05-vyu-plan-01-repository-baseline.md` | Git/repository/tooling/locks/tests/CI baseline |
@@ -31,7 +32,7 @@ These documents are sufficient for a junior developer to identify the correct wo
 | Plan 1 | `IMPLEMENTATION_STATUS.md`, `IMPLEMENTATION_LOG.md`, dependency locks, CI workflow, clean-clone verification |
 | Plan 2 | Database schema/ER documentation, migration policy, tenant-governance import/runbook, RLS evidence, `IMPLEMENTATION_LOG.md` entries |
 | Plan 3 | Versioned OpenAPI, generated client contract, API error/auth/idempotency/job documentation |
-| Plan 4 | Terraform environment README files, deployment/rollback/rotation/restore runbooks, architecture outputs |
+| Plan 4 | Terraform environment README files, deployment/rollback/rotation/restore runbooks, architecture outputs, `PLAN4_OPERATOR_HANDOFF.md` |
 | Plan 5 | Ingestion/file-format policy, quarantine/scan/reprocess/deletion runbook, parser fixture inventory |
 | Plan 6 | Source approval records, connector replay inventory, index manifest schema, retrieval evaluation reports |
 | Plan 7 | Model-provider capability matrix, prompt/model policy registry, model/synthesis evaluation reports |

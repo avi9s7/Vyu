@@ -41,6 +41,7 @@ foreach ($relative in $localFiles) {
 }
 
 Write-Host ""
+Write-Host "Operator handoff: docs/production/PLAN4_OPERATOR_HANDOFF.md"
 Write-Host "GitHub repository variables:"
 & $Gh variable list 2>$null
 

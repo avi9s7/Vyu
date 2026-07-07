@@ -44,5 +44,12 @@ foreach ($environment in @("dev", "staging", "prod")) {
     Write-TfVars -Environment $environment
 }
 
+$BootstrapDir = Join-Path $Root "infra\terraform\bootstrap"
+$bootstrapExample = Join-Path $BootstrapDir "terraform.tfvars.example"
+$bootstrapTarget = Join-Path $BootstrapDir "terraform.tfvars"
+Copy-Item -Path $bootstrapExample -Destination $bootstrapTarget -Force
+Write-Host "Wrote $bootstrapTarget"
+
 Write-Host ""
 Write-Host "Placeholder Terraform files are ready. Replace account, state bucket, zone, and hostnames before apply."
+Write-Host "Operator handoff: docs/production/PLAN4_OPERATOR_HANDOFF.md"

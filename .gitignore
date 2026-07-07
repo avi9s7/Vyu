@@ -6,6 +6,9 @@
 config/*.env
 !config/*.example.env
 !config/*.env.example
+config/dev-*.json
+config/staging-*.json
+config/prod-*.json
 
 # Python
 .venv/

@@ -544,7 +544,13 @@ uv run pytest tests/infra/test_bootstrap_policy.py -q
 powershell -File scripts/plan4_operator_checklist.ps1
 ```
 
-**Follow-ups:** Install AWS CLI, run bootstrap `terraform apply`, sync `backend.hcl`, then `dev` apply.
+**Follow-ups:** Install AWS CLI, run bootstrap `terraform apply`, sync `backend.hcl`, then `dev` apply. Operator resume guide: `docs/production/PLAN4_OPERATOR_HANDOFF.md`.
+
+### 2026-07-07 — Plan 4 operator handoff document (commit pending)
+
+**Goal:** Document implemented Plan 4 work, pilot placeholders, operator blockers, and step-by-step instructions for AWS/DNS/GitHub/secrets inputs.
+
+**Key paths:** `docs/production/PLAN4_OPERATOR_HANDOFF.md`, `infra/terraform/bootstrap/secrets/*.example.json`, `tests/infra/test_plan4_handoff.py`
 
 ---
 

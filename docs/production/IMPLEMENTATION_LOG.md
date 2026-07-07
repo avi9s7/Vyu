@@ -609,7 +609,27 @@ uv run pytest tests/api/test_upload_routes.py -q
 uv run ruff check src/vyu/ingestion src/vyu/api/routers/uploads.py
 ```
 
-**Remaining (Tasks 3–8):** object verification worker, malware/PHI screening, parsers, chunking, evidence APIs, operator runbooks.
+### 2026-07-07 — Plan 5 Task 3: object integrity verification worker (commit pending)
+
+**Goal:** `ingestion.verify` worker runs after upload finalize; HEAD/stream-checks quarantine objects; blocks on mismatch with safe codes; idempotent on duplicate finalize/verify.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| Object store | `src/vyu/ingestion/object_store.py` — `head_object`, `iter_object_chunks`, `stream_sha256_hex` |
+| Service | `src/vyu/ingestion/service.py` — `finalize_upload`, `run_ingestion_verify` |
+| Worker | `src/vyu/ingestion/handler.py`, `src/vyu/jobs/worker.py` |
+| Tests | `tests/integration/ingestion/test_object_verification.py`, `tests/unit/ingestion/test_object_store.py` |
+
+**Verification:**
+
+```powershell
+uv run pytest tests/unit/ingestion -q
+uv run pytest tests/integration/ingestion/test_object_verification.py -q
+```
+
+**Remaining (Tasks 4–8):** malware/PHI screening, parsers, chunking, evidence APIs, operator runbooks.
 
 ---
 

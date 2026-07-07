@@ -5,6 +5,7 @@ from uuid import uuid4
 from src.vyu.ingestion.object_store import (
     QuarantineObjectRef,
     RecordingQuarantineObjectStore,
+    stream_sha256_hex,
 )
 
 
@@ -63,3 +64,16 @@ def test_presigned_post_rejects_wrong_key_in_conditions() -> None:
     post = store.create_presigned_upload(ref)
     assert ["eq", "$key", ref.key] in post.conditions
     assert ["eq", "$key", "some/other/key.pdf"] not in post.conditions
+
+
+def test_stream_sha256_hex_reads_in_chunks() -> None:
+    payload = b"chunk-one" * 1024 + b"chunk-two" * 1024
+
+    def chunks():
+        yield payload[:1024]
+        yield payload[1024:2048]
+        yield payload[2048:]
+
+    import hashlib
+
+    assert stream_sha256_hex(chunks()) == hashlib.sha256(payload).hexdigest()

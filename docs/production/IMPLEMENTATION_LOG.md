@@ -767,7 +767,7 @@ terraform -chdir=infra/terraform/environments/dev validate
 
 **Remaining (Task 9):** operator staging exercise and Plan 5 exit gate evidence.
 
-### 2026-07-07 — Plan 5 Task 9: end-to-end staging validation (commit pending)
+### 2026-07-07 — Plan 5 Task 9: end-to-end staging validation (commit `cf85ca37`)
 
 **Goal:** CI integration proof for upload-to-ready across supported formats, blocked malware/PHI fixtures, tenant isolation, duplicate idempotency, presign integrity controls, finalize API, and operator staging validation tooling.
 
@@ -802,6 +802,27 @@ uv run python scripts/validate_ingestion_staging.py `
 ```
 
 **Follow-ups:** Plan 5 row remains `in_progress` until operator records staging JSON evidence and confirms ingestion alarms during the runbook exercise.
+
+### 2026-07-07 — Plan 6 Task 1: versioned source and tool policy (commit pending)
+
+**Goal:** Persist append-only source and research-tool policy versions in PostgreSQL with import command and planning gates.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| Migration | `src/vyu/migrations/versions/0005_source_retrieval_policy.py` |
+| Policy | `src/vyu/policy/{models,repository,service}.py` |
+| Import | `scripts/import_source_policy.py` |
+| Tests | `tests/integration/policy/` |
+
+**Verification:**
+
+```powershell
+uv run pytest tests/integration/policy -q
+uv run python scripts/import_source_policy.py --dry-run
+uv run python scripts/verify.py --scope backend
+```
 
 ---
 

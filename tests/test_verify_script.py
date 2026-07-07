@@ -36,7 +36,15 @@ class VerifyScriptTests(unittest.TestCase):
             [
                 Command(
                     "postgres-integration",
-                    ("uv", "run", "pytest", "tests/integration/db", "tests/integration/ingestion", "-q"),
+                    (
+                        "uv",
+                        "run",
+                        "pytest",
+                        "tests/integration/db",
+                        "tests/integration/ingestion",
+                        "tests/integration/policy",
+                        "-q",
+                    ),
                 ),
             ],
             commands,

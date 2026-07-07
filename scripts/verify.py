@@ -30,7 +30,15 @@ def commands_for_scope(scope: Scope, *, npm: str) -> list[Command]:
     integration = [
         Command(
             "postgres-integration",
-            ("uv", "run", "pytest", "tests/integration/db", "tests/integration/ingestion", "-q"),
+            (
+                "uv",
+                "run",
+                "pytest",
+                "tests/integration/db",
+                "tests/integration/ingestion",
+                "tests/integration/policy",
+                "-q",
+            ),
         ),
     ]
     frontend = [

@@ -16,13 +16,12 @@ from src.vyu.ingestion.contracts import DocumentStatus
 from src.vyu.ingestion.handler import IngestionVerifyHandler
 from src.vyu.ingestion.models import Document, IngestionEvent
 from src.vyu.ingestion.object_store import QuarantineObjectRef, RecordingQuarantineObjectStore
-from src.vyu.ingestion.service import IngestionService
+from src.vyu.ingestion.service import IngestionService, IngestionVerifyResult
 from src.vyu.ingestion.settings import IngestionSettings, MAX_UPLOAD_BYTES
 from src.vyu.jobs.contracts import JobRecord
 from src.vyu.jobs.models import Job
 from src.vyu.jobs.repository import JobRepository
 from src.vyu.jobs.worker import (
-    HandlerResult,
     JobWorker,
     MessageDisposition,
     WorkerSettings,
@@ -175,7 +174,7 @@ def _run_verify(
     fixture: VerificationFixture,
     *,
     heartbeat: Callable[[], None] | None = None,
-) -> HandlerResult:
+) -> IngestionVerifyResult:
     job = _load_job(fixture)
     with transaction(fixture.factory, scope=fixture.scope) as session:
         return fixture.service.run_ingestion_verify(

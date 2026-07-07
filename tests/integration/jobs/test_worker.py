@@ -9,11 +9,10 @@ from sqlalchemy import select
 
 from src.vyu.db.session import TenantScope, build_engine, build_session_factory, transaction
 from src.vyu.db.settings import DatabaseSettings
-from src.vyu.jobs.contracts import NewJob
+from src.vyu.jobs.contracts import HandlerResult, NewJob
 from src.vyu.jobs.models import Job
 from src.vyu.jobs.repository import JobRepository
 from src.vyu.jobs.worker import (
-    HandlerResult,
     JobWorker,
     MessageDisposition,
     ResearchRunStubHandler,

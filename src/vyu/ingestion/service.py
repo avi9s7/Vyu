@@ -31,7 +31,6 @@ from src.vyu.ingestion.validation import UploadValidationError, validate_upload_
 from src.vyu.jobs.contracts import JobRecord, NewJob
 from src.vyu.jobs.models import Job, OutboxEvent
 from src.vyu.jobs.repository import JobRepository
-from src.vyu.jobs.worker import HandlerResult
 from src.vyu.sources import SourceRegistry
 
 
@@ -49,6 +48,14 @@ class FinalizeUploadResult:
     version_id: str
     status: str
     idempotent: bool
+
+
+@dataclass(frozen=True)
+class IngestionVerifyResult:
+    outcome: str
+    result: dict[str, object] | None = None
+    error_code: str | None = None
+    retryable: bool = False
 
 
 @dataclass(frozen=True)
@@ -346,13 +353,13 @@ class IngestionService:
         job: JobRecord,
         session: Session,
         heartbeat: Callable[[], None],
-    ) -> HandlerResult:
+    ) -> IngestionVerifyResult:
         document_id = UUID(str(job.payload["document_id"]))
         version_id = UUID(str(job.payload["version_id"]))
 
         terminal_event = self._get_terminal_verify_event(session, job.id)
         if terminal_event is not None:
-            return HandlerResult(
+            return IngestionVerifyResult(
                 outcome="complete",
                 result={
                     "status": terminal_event.status,
@@ -364,20 +371,20 @@ class IngestionService:
         document = self.get_document(session, document_id)
         version = self._get_version(session, version_id)
         if document is None or version is None or version.document_id != document_id:
-            return HandlerResult(
+            return IngestionVerifyResult(
                 outcome="terminal_failure",
                 error_code="document_not_found",
             )
 
         if document.status == DocumentStatus.AWAITING_UPLOAD.value:
-            return HandlerResult(
+            return IngestionVerifyResult(
                 outcome="retry",
                 error_code="upload_not_finalized",
                 retryable=True,
             )
 
         if document.status == DocumentStatus.BLOCKED.value:
-            return HandlerResult(
+            return IngestionVerifyResult(
                 outcome="complete",
                 result={"status": "blocked", "idempotent": True},
             )
@@ -386,7 +393,7 @@ class IngestionService:
             DocumentStatus.UPLOADED.value,
             DocumentStatus.SCANNING.value,
         }:
-            return HandlerResult(
+            return IngestionVerifyResult(
                 outcome="terminal_failure",
                 error_code="invalid_document_status",
             )
@@ -396,7 +403,7 @@ class IngestionService:
                 document.status,
                 DocumentStatus.SCANNING.value,
             ):
-                return HandlerResult(
+                return IngestionVerifyResult(
                     outcome="terminal_failure",
                     error_code="invalid_document_status",
                 )
@@ -493,7 +500,7 @@ class IngestionService:
             )
         )
         session.flush()
-        return HandlerResult(
+        return IngestionVerifyResult(
             outcome="complete",
             result={"status": DocumentStatus.SCANNING.value, "code": "object_verified"},
         )
@@ -612,7 +619,7 @@ class IngestionService:
         safe_message: str,
         request_id: str,
         trace_id: str,
-    ) -> HandlerResult:
+    ) -> IngestionVerifyResult:
         if can_transition_document_status(document.status, DocumentStatus.BLOCKED.value):
             document.status = DocumentStatus.BLOCKED.value
         self._append_ingestion_event(
@@ -642,7 +649,7 @@ class IngestionService:
             )
         )
         session.flush()
-        return HandlerResult(
+        return IngestionVerifyResult(
             outcome="complete",
             result={"status": DocumentStatus.BLOCKED.value, "code": code},
         )

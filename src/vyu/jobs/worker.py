@@ -14,7 +14,7 @@ from uuid import UUID
 from sqlalchemy.orm import Session, sessionmaker
 
 from src.vyu.db.session import TenantScope, tenant_scope_statements
-from src.vyu.jobs.contracts import JobRecord
+from src.vyu.jobs.contracts import HandlerResult, JobRecord
 from src.vyu.jobs.models import Job
 from src.vyu.ingestion.handler import IngestionVerifyHandler
 from src.vyu.ingestion.service import IngestionService
@@ -26,14 +26,6 @@ from src.vyu.jobs.repository import JobRepository, TERMINAL_STATUSES
 class MessageDisposition(StrEnum):
     ACK = "ack"
     NACK = "nack"
-
-
-@dataclass(frozen=True)
-class HandlerResult:
-    outcome: str
-    result: dict[str, object] | None = None
-    error_code: str | None = None
-    retryable: bool = False
 
 
 class JobHandler(Protocol):

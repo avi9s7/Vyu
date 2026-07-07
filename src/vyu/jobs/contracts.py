@@ -57,6 +57,14 @@ class JobLease:
 
 
 @dataclass(frozen=True)
+class HandlerResult:
+    outcome: str
+    result: dict[str, object] | None = None
+    error_code: str | None = None
+    retryable: bool = False
+
+
+@dataclass(frozen=True)
 class IdempotencyRequest:
     tenant_id: UUID
     actor_id: str

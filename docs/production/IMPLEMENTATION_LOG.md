@@ -820,6 +820,28 @@ uv run python scripts/validate_ingestion_staging.py `
 
 ---
 
+### 2026-07-08 — Plan 7 Task 4: OpenAI adapter (commit pending)
+
+**Goal:** Add OpenAI Responses API generation and Embeddings API adapters with strict structured output, normalized usage, bounded retries, and mocked contract tests.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| Adapter | `src/vyu/model_gateway/adapters/openai.py` |
+| Fixtures | `tests/fixtures/model_gateway/openai/` |
+| Tests | `tests/unit/model_gateway/adapters/test_openai.py` |
+| Dependency | `openai` in `pyproject.toml` |
+
+**Verification:**
+
+```powershell
+uv run python -m unittest tests.unit.model_gateway.adapters.test_openai -v
+uv run python scripts/verify.py --scope backend
+```
+
+---
+
 ### 2026-07-08 — Plan 7 Task 3: model gateway config and secret resolution (commit pending)
 
 **Goal:** Load non-secret model gateway settings, resolve provider credentials from Secrets Manager with bounded cache refresh, and fail closed on unsafe staging/production startup.

@@ -1,3 +1,4 @@
+from src.vyu.model_gateway.adapters.openai import OpenAIAdapter, supports_structured_synthesis
 from src.vyu.model_gateway.config import (
     ModelGatewayConfigError,
     ModelGatewaySettings,
@@ -43,11 +44,13 @@ __all__ = [
     "GoogleCredentials",
     "ModelGatewayConfigError",
     "ModelGatewaySettings",
+    "OpenAIAdapter",
     "OpenAICredentials",
     "ProviderCredentials",
     "SecretResolutionError",
     "SecretResolver",
     "SecretRotationRunbook",
+    "supports_structured_synthesis",
     "validate_model_gateway_startup",
     "EmbeddingAdapter",
     "EmbeddingRequest",

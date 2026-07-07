@@ -1,0 +1,36 @@
+{
+  "id": "resp_invalid_json_001",
+  "object": "response",
+  "created_at": 1700000003,
+  "model": "gpt-4o-2024-08-06",
+  "status": "completed",
+  "parallel_tool_calls": false,
+  "tool_choice": "auto",
+  "tools": [],
+  "output": [
+    {
+      "id": "msg_invalid_json_001",
+      "type": "message",
+      "role": "assistant",
+      "status": "completed",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "not-json-output",
+          "annotations": []
+        }
+      ]
+    }
+  ],
+  "usage": {
+    "input_tokens": 10,
+    "output_tokens": 4,
+    "total_tokens": 14,
+    "input_tokens_details": {
+      "cached_tokens": 0
+    },
+    "output_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  }
+}

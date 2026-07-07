@@ -583,7 +583,7 @@ uv run pytest tests/unit/ingestion/test_state_machine.py -q
 uv run pytest tests/integration/ingestion/test_migration.py -q
 ```
 
-### 2026-07-07 — Plan 5 Task 2: presigned quarantine uploads (commit pending)
+### 2026-07-07 — Plan 5 Task 2: presigned quarantine uploads (commits `f7cd7e5f`, `fbff0acf`)
 
 **Goal:** `POST /v1/uploads/presign` creates document/version/job/outbox/audit/ingestion_event rows before returning S3 POST fields; validates filename, media type, size, SHA-256, approved source, and `contains_phi=false`.
 

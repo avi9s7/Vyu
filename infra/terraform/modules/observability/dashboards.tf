@@ -298,6 +298,34 @@ resource "aws_cloudwatch_dashboard" "operations" {
           ]
         }
       },
+      {
+        type   = "metric"
+        x      = 0
+        y      = 42
+        width  = 12
+        height = 6
+        properties = {
+          title  = "PubMed probe failures"
+          region = var.aws_region
+          metrics = [
+            [local.metric_namespace, "PubMedProbeFailures", { stat = "Sum" }],
+          ]
+        }
+      },
+      {
+        type   = "metric"
+        x      = 12
+        y      = 42
+        width  = 12
+        height = 6
+        properties = {
+          title  = "PubMed probe latency p95"
+          region = var.aws_region
+          metrics = [
+            [local.metric_namespace, "PubMedProbeLatencyMs", { stat = "p95" }],
+          ]
+        }
+      },
     ]
   })
 }

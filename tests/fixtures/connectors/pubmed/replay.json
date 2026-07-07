@@ -1,0 +1,44 @@
+{
+  "search": {
+    "ids": ["12345", "67890"],
+    "count": 2,
+    "retstart": 0
+  },
+  "fetch": {
+    "articles": [
+      {
+        "uid": "12345",
+        "pmid": "12345",
+        "title": "Aspirin for migraine prophylaxis",
+        "abstract": "This metadata-only PubMed fixture describes aspirin outcomes.",
+        "source": "Headache Journal",
+        "pubdate": "2024 Jan",
+        "authors": ["Smith J", "Doe A"],
+        "pubtype": ["Journal Article"],
+        "lang": "eng",
+        "elocationid": "doi: 10.1000/aspirin.2024"
+      },
+      {
+        "uid": "67890",
+        "pmid": "67890",
+        "title": "Retracted aspirin safety study",
+        "abstract": "This record is retracted and must not support positive answers.",
+        "source": "Retracted Journal",
+        "pubdate": "2020 Mar",
+        "authors": ["Jones B"],
+        "pubtype": ["Retracted Publication"],
+        "lang": "eng"
+      }
+    ]
+  },
+  "summary": {
+    "documents": [
+      {
+        "uid": "12345",
+        "title": "Aspirin for migraine prophylaxis",
+        "pubdate": "2024 Jan",
+        "source": "Headache Journal"
+      }
+    ]
+  }
+}

@@ -820,7 +820,31 @@ uv run python scripts/validate_ingestion_staging.py `
 
 ---
 
-### 2026-07-07 — Plan 6 Task 2: hardened connector runtime (commit pending)
+### 2026-07-07 — Plan 6 Task 3: production PubMed search/fetch (commit pending)
+
+**Goal:** Complete production PubMed search/fetch with normalization hashes, retraction policy, replay fixtures, and staging probe.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| Adapter | `src/vyu/connectors/pubmed/adapter.py` |
+| Contracts | `src/vyu/connectors/pubmed/contracts.py` |
+| Normalization | `src/vyu/connectors/pubmed/normalization.py` |
+| Probe | `src/vyu/connectors/pubmed/probe.py`, `scripts/probe_pubmed_staging.py` |
+| Metrics | `src/vyu/connectors/metrics.py` |
+| Fixtures | `tests/fixtures/connectors/pubmed/replay.json` |
+| Tests | `tests/test_pubmed_production_adapter.py`, `tests/infra/test_connector_observability_policy.py` |
+
+**Verification:**
+
+```powershell
+uv run python -m unittest tests.test_pubmed_production_adapter -v
+uv run python scripts/probe_pubmed_staging.py --stage replay
+uv run python scripts/verify.py --scope backend
+```
+
+---
 
 **Goal:** Replace urllib with HTTPX, add HTTP-aware retries, distributed rate limiting, transport audit hashes, and structured replay fixtures.
 

@@ -6,7 +6,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from src.vyu.connectors import PubMedConnector, SearchRequest
+from src.vyu.connectors.contracts import SearchRequest
+from src.vyu.connectors.pubmed.legacy import PubMedConnector
 
 
 class ConnectorHealthStatus(StrEnum):

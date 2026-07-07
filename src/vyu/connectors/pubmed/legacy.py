@@ -14,6 +14,8 @@ Transport = Callable[[str, dict[str, object]], dict[str, Any]]
 
 
 class PubMedConnector:
+    """Legacy summary-based PubMed connector retained for deterministic replay tests."""
+
     source = "pubmed"
     base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 

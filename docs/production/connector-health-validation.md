@@ -44,6 +44,7 @@ Each staged validation record includes:
 
 - Replay validation should run in normal local and CI workflows.
 - Live validation must remain opt-in through `VYU_RUN_LIVE_PUBMED_TESTS=1`.
+- Scheduled staging probes use `scripts/probe_pubmed_staging.py` with replay by default and live execution gated by `VYU_RUN_LIVE_PUBMED_PROBE=1`.
 - Live validation requires NCBI runtime settings such as `VYU_NCBI_EMAIL` and `VYU_NCBI_TOOL`.
 - Failed validation records should be retained for staged connector triage.
 - Production readiness requires at least one passing connector health record and at least one passing staged connector validation record for the run scope.

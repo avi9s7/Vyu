@@ -33,5 +33,7 @@ locals {
     "ingestion_ready_latency",
     "ingestion_duplicates",
     "ingestion_quarantine_age",
+    "pubmed_probe_failures",
+    "pubmed_probe_latency",
   ]
 }

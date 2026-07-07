@@ -436,3 +436,17 @@ resource "aws_cloudwatch_metric_alarm" "ingestion_quarantine_age" {
   treat_missing_data  = "notBreaching"
   alarm_actions       = local.alarm_actions_standard
 }
+
+resource "aws_cloudwatch_metric_alarm" "pubmed_probe_failures" {
+  alarm_name          = "${local.name_prefix}-pubmed-probe-failures"
+  alarm_description   = "Repeated PubMed staging probe failures"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "PubMedProbeFailures"
+  namespace           = local.metric_namespace
+  period              = 300
+  statistic           = "Sum"
+  threshold           = 0
+  treat_missing_data  = "notBreaching"
+  alarm_actions       = local.alarm_actions_critical
+}

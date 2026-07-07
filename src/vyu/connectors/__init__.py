@@ -6,6 +6,7 @@ from src.vyu.connectors.contracts import (
 )
 from src.vyu.connectors.audit import JsonlAuditSink, JsonlTransportAuditSink, TransportAuditRecord
 from src.vyu.connectors.dummy import DummyConnector
+from src.vyu.connectors.pubmed import ProductionPubMedConnector
 from src.vyu.connectors.pubmed import PubMedConnector
 from src.vyu.connectors.pubmed_live import PubMedHttpTransport, PubMedReplayTransport
 from src.vyu.connectors.research_sources import (
@@ -25,6 +26,7 @@ __all__ = [
     "GuidelineSourceConnector",
     "InternalDocumentConnector",
     "JsonlAuditSink",
+    "ProductionPubMedConnector",
     "PubMedConnector",
     "PubMedHttpTransport",
     "PubMedReplayTransport",

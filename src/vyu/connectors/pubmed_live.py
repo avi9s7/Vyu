@@ -53,22 +53,33 @@ class PubMedHttpTransport:
         def operation() -> dict[str, Any]:
             if self.opener is not None:
                 body = self.opener(query_url, self.timeout_seconds)
-                payload = json.loads(body.decode("utf-8"))
+                if mode == "fetch":
+                    payload = {"xml": body.decode("utf-8")}
+                else:
+                    payload = json.loads(body.decode("utf-8"))
                 status_code = 200
                 elapsed_seconds = 0.0
                 provider_request_id = None
             else:
                 assert self.http_client is not None
                 response = self.http_client.get(url, params=request_params)
-                payload = response.json()
+                if mode == "fetch":
+                    payload = {"xml": response.body.decode("utf-8")}
+                else:
+                    payload = response.json()
                 status_code = response.status_code
                 elapsed_seconds = response.elapsed_seconds
                 provider_request_id = response.provider_request_id
                 body = response.body
 
-            normalized = (
-                _normalize_esearch(payload) if mode == "search" else _normalize_esummary(payload)
-            )
+            if mode == "fetch":
+                normalized = payload
+            elif mode == "search":
+                normalized = _normalize_esearch(payload)
+            elif mode == "summary":
+                normalized = _normalize_esummary(payload)
+            else:
+                raise ValueError(f"Unsupported PubMed transport mode: {mode}")
             self._audit_transport(
                 mode=mode,
                 query_url=query_url,
@@ -87,6 +98,7 @@ class PubMedHttpTransport:
         return result.value
 
     def _request_params(self, params: dict[str, object]) -> dict[str, object]:
+        mode = str(params["mode"])
         query_params = {
             key: value
             for key, value in params.items()
@@ -94,7 +106,9 @@ class PubMedHttpTransport:
         }
         if "ids" in params:
             query_params["id"] = params["ids"]
-        query_params["retmode"] = "json"
+        query_params["retmode"] = "json" if mode != "fetch" else "xml"
+        if mode == "fetch":
+            query_params["rettype"] = "abstract"
         query_params["tool"] = self.tool
         query_params["email"] = self.email
         if self.api_key:
@@ -175,4 +189,6 @@ def _normalize_esummary(payload: dict[str, Any]) -> dict[str, Any]:
 def _result_count(normalized: dict[str, Any]) -> int:
     if "ids" in normalized:
         return len(normalized["ids"])
+    if "xml" in normalized:
+        return normalized["xml"].count("<PubmedArticle>")
     return len(normalized.get("documents", []))

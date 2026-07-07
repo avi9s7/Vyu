@@ -820,6 +820,28 @@ uv run python scripts/validate_ingestion_staging.py `
 
 ---
 
+### 2026-07-08 — Plan 7 Task 1: provider-neutral gateway contracts (commit pending)
+
+**Goal:** Define immutable model/embedding gateway contracts, error taxonomy, and validation-before-call routing with fake adapter tests.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| Contracts | `src/vyu/model_gateway/contracts.py` |
+| Errors | `src/vyu/model_gateway/errors.py` |
+| Gateway | `src/vyu/model_gateway/gateway.py` |
+| Tests | `tests/unit/model_gateway/` |
+
+**Verification:**
+
+```powershell
+uv run python -m unittest tests.unit.model_gateway -v
+uv run python scripts/verify.py --scope backend
+```
+
+---
+
 ### 2026-07-07 — Plan 6 Tasks 6–10: index jobs, hybrid retrieval, APIs, evaluation, staging (commit pending)
 
 **Goal:** Complete deterministic index builds, PostgreSQL hybrid retrieval, evidence/admin APIs, synthetic evaluation gates, and staging validation checklist.

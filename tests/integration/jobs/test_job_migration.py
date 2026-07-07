@@ -53,7 +53,7 @@ def test_job_migration_upgrade_downgrade_and_repeat(postgres_urls: dict[str, str
         text=True,
         env=_alembic_env(migration_url),
     )
-    assert "0003" in current.stdout
+    assert "0004" in current.stdout
 
     table_names = set(inspect(engine).get_table_names())
     assert set(JOB_TABLES).issubset(table_names)

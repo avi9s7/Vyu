@@ -17,10 +17,18 @@ from src.vyu.api.routers.auth_debug import create_auth_debug_router
 from src.vyu.api.routers.health import create_health_router, create_version_router
 from src.vyu.api.routers.me import create_me_router
 from src.vyu.api.routers.research import create_research_router
+from src.vyu.api.routers.evidence_documents import (
+    create_evidence_documents_router,
+    create_ingestion_jobs_router,
+)
+from src.vyu.api.routers.uploads import create_uploads_router
 from src.vyu.api.settings import ApiSettings
 from src.vyu.auth.settings import AuthSettings
 from src.vyu.db.session import build_engine, build_session_factory
 from src.vyu.db.settings import DatabaseSettings
+from src.vyu.ingestion.library import EvidenceLibraryService
+from src.vyu.ingestion.service import IngestionService
+from src.vyu.ingestion.settings import IngestionSettings
 from src.vyu.research.service import ResearchService
 from src.vyu.research.settings import ResearchSettings
 
@@ -50,6 +58,9 @@ def create_app(
     auth_settings_override: AuthSettings | None = None,
     research_settings_override: ResearchSettings | None = None,
     research_service_override: ResearchService | None = None,
+    ingestion_settings_override: IngestionSettings | None = None,
+    ingestion_service_override: IngestionService | None = None,
+    evidence_library_service_override: EvidenceLibraryService | None = None,
     engine_override: Engine | None = None,
     schema_revision_override: str | None = None,
     session_factory_override: sessionmaker[Session] | None = None,
@@ -64,6 +75,13 @@ def create_app(
     auth_settings, token_verifier = build_auth_runtime(auth_settings)
     research_settings = research_settings_override or ResearchSettings(env=api_settings.env)
     research_service = research_service_override or ResearchService.from_settings(research_settings)
+    ingestion_settings = ingestion_settings_override or IngestionSettings(env=api_settings.env)
+    ingestion_service = ingestion_service_override or IngestionService.from_settings(
+        ingestion_settings
+    )
+    evidence_library_service = evidence_library_service_override or EvidenceLibraryService(
+        settings=ingestion_settings
+    )
     session_factory = session_factory_override or build_session_factory(engine)
 
     app = FastAPI(title="VYU API", version="0.1.0", openapi_url="/v1/openapi.json")
@@ -73,6 +91,9 @@ def create_app(
     app.state.token_verifier = token_verifier
     app.state.research_settings = research_settings
     app.state.research_service = research_service
+    app.state.ingestion_settings = ingestion_settings
+    app.state.ingestion_service = ingestion_service
+    app.state.evidence_library_service = evidence_library_service
     app.state.engine = engine
     app.state.schema_revision = schema_revision
     app.state.session_factory = session_factory
@@ -143,6 +164,9 @@ def create_app(
     v1.include_router(create_me_router())
     v1.include_router(create_auth_debug_router())
     v1.include_router(create_research_router())
+    v1.include_router(create_uploads_router())
+    v1.include_router(create_evidence_documents_router())
+    v1.include_router(create_ingestion_jobs_router())
 
     @v1.get("/debug/boom", include_in_schema=False)
     def debug_boom() -> None:

@@ -1,0 +1,420 @@
+from __future__ import annotations
+
+import hashlib
+from collections.abc import Callable
+from dataclasses import dataclass
+from uuid import UUID, uuid4
+
+import pytest
+from sqlalchemy import func, select
+
+from src.vyu.api.schemas.uploads import PresignUploadRequest
+from src.vyu.auth.principal import RequestPrincipal
+from src.vyu.db.session import TenantScope, build_engine, build_session_factory, transaction
+from src.vyu.db.settings import DatabaseSettings
+from src.vyu.ingestion.contracts import DocumentStatus
+from src.vyu.ingestion.handler import IngestionVerifyHandler
+from src.vyu.ingestion.models import Document, IngestionEvent
+from src.vyu.ingestion.object_store import QuarantineObjectRef, RecordingEvidenceObjectStore, RecordingQuarantineObjectStore
+from src.vyu.ingestion.service import IngestionService, IngestionVerifyResult
+from src.vyu.ingestion.settings import IngestionSettings, MAX_UPLOAD_BYTES
+from src.vyu.jobs.contracts import JobRecord
+from src.vyu.jobs.models import Job
+from src.vyu.jobs.repository import JobRepository
+from src.vyu.jobs.worker import (
+    JobWorker,
+    MessageDisposition,
+    WorkerSettings,
+    message_from_job,
+)
+from src.vyu.sources import ProductionSourceRecord, SourceRegistry
+from tests.api.support import seed_active_membership
+from tests.fixtures.ingestion.builders import PUBLIC_ARTICLE_TEXT
+
+
+@dataclass
+class VerificationFixture:
+    scope: TenantScope
+    factory: object
+    service: IngestionService
+    store: RecordingQuarantineObjectStore
+    principal: RequestPrincipal
+    ref: QuarantineObjectRef
+    document_id: UUID
+    version_id: UUID
+    job_id: UUID
+
+
+def approved_internal_documents_source() -> ProductionSourceRecord:
+    return ProductionSourceRecord(
+        source_id="internal_documents",
+        display_name="Internal Documents",
+        source_type="tenant_documents",
+        owner="Vyu",
+        license_or_terms="test",
+        allowed_uses=["document_upload"],
+        access_policy="all_approved_workspaces",
+        approval_status="approved",
+        approved_by="production-review-board",
+        approved_at="2026-06-13T00:00:00Z",
+    )
+
+
+def _build_service(store: RecordingQuarantineObjectStore) -> IngestionService:
+    registry = SourceRegistry([approved_internal_documents_source()])
+    evidence_store = RecordingEvidenceObjectStore(
+        bucket="vyu-test-evidence",
+        kms_key_id="arn:aws:kms:ap-south-1:123456789012:key/00000000-0000-0000-0000-000000000000",
+    )
+    return IngestionService(
+        settings=IngestionSettings(env="test", use_isolated_parser=False),
+        source_registry=registry,
+        object_store=store,
+        evidence_store=evidence_store,
+    )
+
+
+def _build_principal(
+    *,
+    user_id: UUID,
+    tenant_id: UUID,
+    workspace_id: UUID,
+    subject: str,
+) -> RequestPrincipal:
+    return RequestPrincipal(
+        user_id=user_id,
+        issuer="https://test.vyu.invalid",
+        subject=subject,
+        email="ingestion@test.vyu",
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        role="researcher",
+        authentication_method="test",
+    )
+
+
+@pytest.fixture
+def verification_fixture(postgres_urls: dict[str, str]) -> VerificationFixture:
+    migration_factory = build_session_factory(
+        build_engine(DatabaseSettings(database_url=postgres_urls["migration"]))
+    )
+    tenant_id, workspace_id, user_id = seed_active_membership(
+        migration_factory,
+        subject="ingestion-test-user",
+        role="researcher",
+    )
+    scope = TenantScope(tenant_id=tenant_id, workspace_id=workspace_id)
+    factory = build_session_factory(
+        build_engine(DatabaseSettings(database_url=postgres_urls["migration"]))
+    )
+    store = RecordingQuarantineObjectStore(
+        bucket="vyu-test-quarantine",
+        region="ap-south-1",
+        kms_key_id="arn:aws:kms:ap-south-1:123456789012:key/00000000-0000-0000-0000-000000000000",
+        expiry_seconds=600,
+    )
+    service = _build_service(store)
+    principal = _build_principal(
+        user_id=user_id,
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        subject="ingestion-test-user",
+    )
+    return _seed_upload(
+        scope=scope,
+        factory=factory,
+        service=service,
+        store=store,
+        principal=principal,
+        body_bytes=PUBLIC_ARTICLE_TEXT.encode("utf-8"),
+        filename="report.txt",
+        media_type="text/plain",
+    )
+
+
+def _seed_upload(
+    *,
+    scope: TenantScope,
+    factory: object,
+    service: IngestionService,
+    store: RecordingQuarantineObjectStore,
+    principal: RequestPrincipal,
+    body_bytes: bytes,
+    filename: str = "report.txt",
+    media_type: str = "text/plain",
+) -> VerificationFixture:
+    sha256 = hashlib.sha256(body_bytes).hexdigest()
+    request = PresignUploadRequest(
+        filename=filename,
+        media_type=media_type,
+        size_bytes=len(body_bytes),
+        sha256=sha256,
+        source_id="internal_documents",
+        contains_phi=False,
+    )
+    with transaction(factory, scope=scope) as session:
+        response = service.create_presigned_upload(
+            body=request,
+            principal=principal,
+            request_id="req-presign",
+            trace_id="trace-presign",
+            session=session,
+        )
+    document_id = UUID(response.document_id)
+    version_id = UUID(response.version_id)
+    job_id = UUID(response.job_id)
+    ref = QuarantineObjectRef(
+        bucket=store.bucket,
+        key=response.object_key,
+        tenant_id=scope.tenant_id,
+        workspace_id=scope.workspace_id,
+        document_id=document_id,
+        version_id=version_id,
+        filename=filename,
+        media_type=media_type,
+        size_bytes=len(body_bytes),
+        sha256=sha256,
+    )
+    return VerificationFixture(
+        scope=scope,
+        factory=factory,
+        service=service,
+        store=store,
+        principal=principal,
+        ref=ref,
+        document_id=document_id,
+        version_id=version_id,
+        job_id=job_id,
+    )
+
+
+def _finalize(fixture: VerificationFixture) -> None:
+    with transaction(fixture.factory, scope=fixture.scope) as session:
+        fixture.service.finalize_upload(
+            document_id=fixture.document_id,
+            version_id=fixture.version_id,
+            principal=fixture.principal,
+            request_id="req-finalize",
+            trace_id="trace-finalize",
+            session=session,
+        )
+
+
+def _load_job(fixture: VerificationFixture) -> JobRecord:
+    repository = JobRepository()
+    with transaction(fixture.factory, scope=fixture.scope) as session:
+        job = repository.get_job(fixture.job_id, session)
+        assert job is not None
+        return job
+
+
+def _run_verify(
+    fixture: VerificationFixture,
+    *,
+    heartbeat: Callable[[], None] | None = None,
+) -> IngestionVerifyResult:
+    job = _load_job(fixture)
+    with transaction(fixture.factory, scope=fixture.scope) as session:
+        return fixture.service.run_ingestion_verify(
+            job=job,
+            session=session,
+            heartbeat=heartbeat or (lambda: None),
+        )
+
+
+def _event_count(fixture: VerificationFixture, code: str) -> int:
+    with transaction(fixture.factory, scope=fixture.scope) as session:
+        count = session.scalar(
+            select(func.count())
+            .select_from(IngestionEvent)
+            .where(
+                IngestionEvent.job_id == fixture.job_id,
+                IngestionEvent.code == code,
+            )
+        )
+        return int(count or 0)
+
+
+def _document_status(fixture: VerificationFixture) -> str:
+    with transaction(fixture.factory, scope=fixture.scope) as session:
+        document = session.scalar(
+            select(Document).where(Document.id == fixture.document_id)
+        )
+        assert document is not None
+        return document.status
+
+
+def test_verify_valid_object(verification_fixture: VerificationFixture) -> None:
+    fixture = verification_fixture
+    fixture.store.seed_object(fixture.ref, PUBLIC_ARTICLE_TEXT.encode("utf-8"))
+    _finalize(fixture)
+
+    result = _run_verify(fixture)
+
+    assert result.outcome == "complete"
+    assert result.result is not None
+    assert result.result["code"] == "ready"
+    assert _document_status(fixture) == DocumentStatus.READY.value
+    assert _event_count(fixture, "ready") == 1
+
+
+def test_verify_missing_object_blocks_document(verification_fixture: VerificationFixture) -> None:
+    fixture = verification_fixture
+    _finalize(fixture)
+
+    result = _run_verify(fixture)
+
+    assert result.outcome == "complete"
+    assert result.result is not None
+    assert result.result["code"] == "object_missing"
+    assert _document_status(fixture) == DocumentStatus.BLOCKED.value
+
+
+def test_verify_metadata_spoof_blocks_document(verification_fixture: VerificationFixture) -> None:
+    fixture = verification_fixture
+    fixture.store.seed_object(
+        fixture.ref,
+        PUBLIC_ARTICLE_TEXT.encode("utf-8"),
+        metadata_overrides={"tenant-id": str(uuid4())},
+    )
+    _finalize(fixture)
+
+    result = _run_verify(fixture)
+
+    assert result.outcome == "complete"
+    assert result.result is not None
+    assert result.result["code"] == "scope_metadata_mismatch"
+    assert _document_status(fixture) == DocumentStatus.BLOCKED.value
+
+
+def test_verify_checksum_mismatch_blocks_document(verification_fixture: VerificationFixture) -> None:
+    fixture = verification_fixture
+    original = PUBLIC_ARTICLE_TEXT.encode("utf-8")
+    tampered = original[:-1] + b"X"
+    fixture.store.seed_object(
+        fixture.ref,
+        tampered,
+        include_checksum_metadata=False,
+    )
+    _finalize(fixture)
+
+    result = _run_verify(fixture)
+
+    assert result.outcome == "complete"
+    assert result.result is not None
+    assert result.result["code"] == "checksum_mismatch"
+    assert _document_status(fixture) == DocumentStatus.BLOCKED.value
+
+
+def test_duplicate_finalize_is_idempotent(verification_fixture: VerificationFixture) -> None:
+    fixture = verification_fixture
+    _finalize(fixture)
+    _finalize(fixture)
+
+    assert _event_count(fixture, "upload_finalized") == 1
+    assert _document_status(fixture) == DocumentStatus.UPLOADED.value
+
+
+def test_duplicate_verify_does_not_repeat_scan(verification_fixture: VerificationFixture) -> None:
+    fixture = verification_fixture
+    fixture.store.seed_object(fixture.ref, PUBLIC_ARTICLE_TEXT.encode("utf-8"))
+    _finalize(fixture)
+
+    first = _run_verify(fixture)
+    second = _run_verify(fixture)
+
+    assert first.result is not None
+    assert first.result["code"] == "ready"
+    assert second.result is not None
+    assert second.result.get("idempotent") is True
+    assert _event_count(fixture, "ready") == 1
+
+
+def test_verify_before_finalize_retries(verification_fixture: VerificationFixture) -> None:
+    fixture = verification_fixture
+    fixture.store.seed_object(fixture.ref, PUBLIC_ARTICLE_TEXT.encode("utf-8"))
+
+    result = _run_verify(fixture)
+
+    assert result.outcome == "retry"
+    assert result.error_code == "upload_not_finalized"
+    assert _document_status(fixture) == DocumentStatus.AWAITING_UPLOAD.value
+
+
+def test_verify_streams_large_object_without_metadata_checksum(
+    postgres_urls: dict[str, str],
+) -> None:
+    migration_factory = build_session_factory(
+        build_engine(DatabaseSettings(database_url=postgres_urls["migration"]))
+    )
+    tenant_id, workspace_id, user_id = seed_active_membership(
+        migration_factory,
+        subject="ingestion-large-test-user",
+        role="researcher",
+    )
+    scope = TenantScope(tenant_id=tenant_id, workspace_id=workspace_id)
+    factory = build_session_factory(
+        build_engine(DatabaseSettings(database_url=postgres_urls["migration"]))
+    )
+    store = RecordingQuarantineObjectStore(
+        bucket="vyu-test-quarantine",
+        region="ap-south-1",
+        kms_key_id="arn:aws:kms:ap-south-1:123456789012:key/00000000-0000-0000-0000-000000000000",
+        expiry_seconds=600,
+    )
+    service = _build_service(store)
+    principal = _build_principal(
+        user_id=user_id,
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        subject="ingestion-large-test-user",
+    )
+    body_bytes = b"x" * MAX_UPLOAD_BYTES
+    fixture = _seed_upload(
+        scope=scope,
+        factory=factory,
+        service=service,
+        store=store,
+        principal=principal,
+        body_bytes=body_bytes,
+        filename="large.txt",
+        media_type="text/plain",
+    )
+    fixture.store.seed_object(
+        fixture.ref,
+        body_bytes,
+        include_checksum_metadata=False,
+    )
+    _finalize(fixture)
+
+    heartbeats = 0
+
+    def heartbeat() -> None:
+        nonlocal heartbeats
+        heartbeats += 1
+
+    result = _run_verify(fixture, heartbeat=heartbeat)
+
+    assert result.outcome == "complete"
+    assert result.result is not None
+    assert result.result["code"] == "ready"
+    assert heartbeats >= 1
+    assert _document_status(fixture) == DocumentStatus.READY.value
+
+
+def test_worker_processes_ingestion_verify_job(verification_fixture: VerificationFixture) -> None:
+    fixture = verification_fixture
+    fixture.store.seed_object(fixture.ref, PUBLIC_ARTICLE_TEXT.encode("utf-8"))
+    _finalize(fixture)
+    worker = JobWorker(
+        repository=JobRepository(),
+        settings=WorkerSettings(worker_id="verify-worker"),
+        handlers={"ingestion.verify": IngestionVerifyHandler(fixture.service)},
+    )
+    with transaction(fixture.factory, scope=fixture.scope) as session:
+        job_row = session.scalar(select(Job).where(Job.id == fixture.job_id))
+        assert job_row is not None
+        disposition = worker.process_queue_message(message_from_job(job_row), session)
+    assert disposition == MessageDisposition.ACK
+    assert _document_status(fixture) == DocumentStatus.READY.value
+    assert _event_count(fixture, "ready") == 1

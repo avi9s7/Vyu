@@ -338,3 +338,101 @@ resource "aws_cloudwatch_metric_alarm" "backup_status" {
     DBInstanceIdentifier = var.database_instance_identifier
   }
 }
+
+resource "aws_cloudwatch_metric_alarm" "ingestion_malware_infected" {
+  alarm_name          = "${local.name_prefix}-ingestion-malware-infected"
+  alarm_description   = "Ingestion malware detections"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "IngestionMalwareInfected"
+  namespace           = local.metric_namespace
+  period              = 300
+  statistic           = "Sum"
+  threshold           = 0
+  treat_missing_data  = "notBreaching"
+  alarm_actions       = local.alarm_actions_critical
+}
+
+resource "aws_cloudwatch_metric_alarm" "ingestion_phi_blocked" {
+  alarm_name          = "${local.name_prefix}-ingestion-phi-blocked"
+  alarm_description   = "Ingestion suspected PHI blocks"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "IngestionPhiBlocked"
+  namespace           = local.metric_namespace
+  period              = 300
+  statistic           = "Sum"
+  threshold           = 0
+  treat_missing_data  = "notBreaching"
+  alarm_actions       = local.alarm_actions_critical
+}
+
+resource "aws_cloudwatch_metric_alarm" "ingestion_phi_unknown" {
+  alarm_name          = "${local.name_prefix}-ingestion-phi-unknown"
+  alarm_description   = "Ingestion uncertain PHI classifications"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "IngestionPhiUnknown"
+  namespace           = local.metric_namespace
+  period              = 300
+  statistic           = "Sum"
+  threshold           = 0
+  treat_missing_data  = "notBreaching"
+  alarm_actions       = local.alarm_actions_critical
+}
+
+resource "aws_cloudwatch_metric_alarm" "ingestion_scan_errors" {
+  alarm_name          = "${local.name_prefix}-ingestion-scan-errors"
+  alarm_description   = "Ingestion screening failures"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "IngestionScanErrors"
+  namespace           = local.metric_namespace
+  period              = 300
+  statistic           = "Sum"
+  threshold           = 0
+  treat_missing_data  = "notBreaching"
+  alarm_actions       = local.alarm_actions_standard
+}
+
+resource "aws_cloudwatch_metric_alarm" "ingestion_parser_failures" {
+  alarm_name          = "${local.name_prefix}-ingestion-parser-failures"
+  alarm_description   = "Ingestion parser failures"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "IngestionParserFailures"
+  namespace           = local.metric_namespace
+  period              = 300
+  statistic           = "Sum"
+  threshold           = 0
+  treat_missing_data  = "notBreaching"
+  alarm_actions       = local.alarm_actions_standard
+}
+
+resource "aws_cloudwatch_metric_alarm" "ingestion_ready_latency" {
+  alarm_name          = "${local.name_prefix}-ingestion-ready-latency"
+  alarm_description   = "Ingestion ready latency p95"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "IngestionReadyLatencyMs"
+  namespace           = local.metric_namespace
+  period              = 300
+  extended_statistic  = "p95"
+  threshold           = 900000
+  treat_missing_data  = "notBreaching"
+  alarm_actions       = local.alarm_actions_standard
+}
+
+resource "aws_cloudwatch_metric_alarm" "ingestion_quarantine_age" {
+  alarm_name          = "${local.name_prefix}-ingestion-quarantine-age"
+  alarm_description   = "Blocked quarantine object age p95"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "IngestionQuarantineAgeSeconds"
+  namespace           = local.metric_namespace
+  period              = 3600
+  extended_statistic  = "p95"
+  threshold           = 604800
+  treat_missing_data  = "notBreaching"
+  alarm_actions       = local.alarm_actions_standard
+}

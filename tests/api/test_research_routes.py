@@ -102,7 +102,7 @@ def test_unapproved_source_returns_422(postgres_urls: dict[str, str]) -> None:
     )
     context = build_auth_test_client(postgres_urls)
     app = create_app(
-        settings_override=ApiSettings(env="test", expected_migration_revision="0003"),
+        settings_override=ApiSettings(env="test", expected_migration_revision="0004"),
         database_settings_override=DatabaseSettings(database_url=postgres_urls["app"]),
         auth_settings_override=AuthSettings(
             env="test",
@@ -112,7 +112,7 @@ def test_unapproved_source_returns_422(postgres_urls: dict[str, str]) -> None:
             hs256_secret="test-auth-secret",
             require_email_verified=True,
         ),
-        schema_revision_override="0003",
+        schema_revision_override="0004",
         research_service_override=ResearchService(
             settings=ResearchSettings(env="test"),
             source_registry=draft_registry,
@@ -172,7 +172,7 @@ def test_cancel_sets_cancel_requested_and_emits_event(research_context: AuthTest
 def test_openapi_contains_research_routes() -> None:
     app = create_app(
         engine_override=create_engine("sqlite+pysqlite:///:memory:"),
-        schema_revision_override="0003",
+        schema_revision_override="0004",
     )
     schema = app.openapi()
     paths = schema["paths"]
@@ -190,7 +190,7 @@ def test_export_openapi_writes_document(tmp_path: Path) -> None:
     output = tmp_path / "openapi.json"
     schema = create_app(
         engine_override=create_engine("sqlite+pysqlite:///:memory:"),
-        schema_revision_override="0003",
+        schema_revision_override="0004",
     ).openapi()
     output.write_text(__import__("json").dumps(schema, indent=2) + "\n", encoding="utf-8")
     assert output.exists()

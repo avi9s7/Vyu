@@ -9,6 +9,9 @@ config/*.env
 config/dev-*.json
 config/staging-*.json
 config/prod-*.json
+config/dev-*.txt
+config/staging-*.txt
+config/prod-*.txt
 
 # Python
 .venv/

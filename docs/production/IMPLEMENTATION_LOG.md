@@ -552,6 +552,257 @@ powershell -File scripts/plan4_operator_checklist.ps1
 
 **Key paths:** `docs/production/PLAN4_OPERATOR_HANDOFF.md`, `infra/terraform/bootstrap/secrets/*.example.json`, `tests/infra/test_plan4_handoff.py`
 
+### 2026-07-07 — Plan 4 resume automation (commit pending)
+
+**Goal:** Phase A–E orchestration, AWS CLI installer, GitHub reviewer wiring, pilot infra-plan skip, database URL secret template.
+
+**Key paths:** `scripts/plan4_resume.ps1`, `scripts/install_aws_cli.ps1`, `scripts/seed_plan4_secret_templates.ps1`, `scripts/setup_github_environment_reviewers.ps1`, `tests/infra/test_plan4_resume_scripts.py`
+
+**Verification:**
+
+```powershell
+uv run pytest tests/infra/test_plan4_handoff.py tests/infra/test_plan4_resume_scripts.py -q
+powershell -File scripts/plan4_resume.ps1 -Phase A -DryRun
+powershell -File scripts/setup_github_environment_reviewers.ps1
+```
+
+### 2026-07-07 — Plan 4 implementation phase concluded (engineering)
+
+**Decision:** Plan 4 row set to `blocked` (not `complete`). All Tasks 1–10 code, CI, runbooks, bootstrap, and operator handoff are on `main`. Operational exit gate (staging deploy, rollback, rotation, restore) deferred to `PLAN4_OPERATOR_HANDOFF.md`. Engineering proceeds to Plan 5.
+
+### 2026-07-07 — Plan 5 Task 1: governed evidence ingestion schema (commits `b2c93c33`, `91d11c23`)
+
+**Goal:** Alembic `0004` tables for documents, versions, evidence objects, chunks, ingestion events; tenant/workspace RLS; document status state machine.
+
+**Key paths:** `src/vyu/migrations/versions/0004_evidence_ingestion.py`, `src/vyu/ingestion/contracts.py`, `tests/unit/ingestion/test_state_machine.py`, `tests/integration/ingestion/test_migration.py`
+
+**Verification:**
+
+```powershell
+uv run pytest tests/unit/ingestion/test_state_machine.py -q
+uv run pytest tests/integration/ingestion/test_migration.py -q
+```
+
+### 2026-07-07 — Plan 5 Task 2: presigned quarantine uploads (commits `f7cd7e5f`, `fbff0acf`)
+
+**Goal:** `POST /v1/uploads/presign` creates document/version/job/outbox/audit/ingestion_event rows before returning S3 POST fields; validates filename, media type, size, SHA-256, approved source, and `contains_phi=false`.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| Settings / validation | `src/vyu/ingestion/{settings,validation}.py` |
+| Object store | `src/vyu/ingestion/object_store.py` |
+| Service / models | `src/vyu/ingestion/{models,service}.py` |
+| API | `src/vyu/api/{routers/uploads.py,schemas/uploads.py}`, `app.py` |
+| Authz | `src/vyu/authz/__init__.py` — `Action.UPLOAD_DOCUMENT` |
+| Registry | `config/source_registry.example.json` — `internal_documents` |
+| Tests | `tests/unit/ingestion/test_{validation,object_store}.py`, `tests/api/test_upload_routes.py` |
+
+**Quarantine key:** `{env}/{tenant_id}/{workspace_id}/quarantine/{document_id}/{version_id}/{sanitized_filename}`
+
+**Verification:**
+
+```powershell
+uv run pytest tests/unit/ingestion -q
+uv run pytest tests/api/test_upload_routes.py -q
+uv run ruff check src/vyu/ingestion src/vyu/api/routers/uploads.py
+```
+
+### 2026-07-07 — Plan 5 Task 3: object integrity verification worker (commit pending)
+
+**Goal:** `ingestion.verify` worker runs after upload finalize; HEAD/stream-checks quarantine objects; blocks on mismatch with safe codes; idempotent on duplicate finalize/verify.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| Object store | `src/vyu/ingestion/object_store.py` — `head_object`, `iter_object_chunks`, `stream_sha256_hex` |
+| Service | `src/vyu/ingestion/service.py` — `finalize_upload`, `run_ingestion_verify` |
+| Worker | `src/vyu/ingestion/handler.py`, `src/vyu/jobs/worker.py` |
+| Tests | `tests/integration/ingestion/test_object_verification.py`, `tests/unit/ingestion/test_object_store.py` |
+
+**Verification:**
+
+```powershell
+uv run pytest tests/unit/ingestion -q
+uv run pytest tests/integration/ingestion/test_object_verification.py -q
+```
+
+**Remaining (Tasks 5–8):** parsers, chunking, evidence APIs, operator runbooks.
+
+### 2026-07-07 — Plan 5 Task 4: malware and sensitive-data screening (commit pending)
+
+**Goal:** After object integrity verification, `ingestion.verify` runs bounded local malware and PHI screening; only `clean` + `non_phi` proceed to `screening_passed`.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| Malware | `src/vyu/ingestion/malware.py` — `MalwareScanner`, `EicarRulesMalwareScanner`, EICAR rules adapter |
+| Classifiers | `src/vyu/ingestion/classifiers.py` — `SensitiveDataClassifier`, `RulesSensitiveDataClassifier` |
+| Sampling | `src/vyu/ingestion/sampling.py` — `bounded_text_sample` |
+| Service | `src/vyu/ingestion/service.py` — `_run_security_screening`, terminal codes on `ingestion_events` |
+| Tests | `tests/unit/ingestion/test_malware_and_classifiers.py`, `tests/integration/ingestion/test_security_screening.py` |
+
+**CI fix (Task 3):** `approved_internal_documents_source()` in `test_object_verification.py` sets `approved_by` / `approved_at` required by `SourceRegistry.approved`.
+
+**Verification:**
+
+```powershell
+uv run pytest tests/unit/ingestion -q
+uv run python scripts/verify.py --scope backend
+# Integration (Docker/CI):
+uv run pytest tests/integration/ingestion -q
+```
+
+### 2026-07-07 — Plan 5 Task 5: safe document parsers (commit pending)
+
+**Goal:** After screening, `ingestion.verify` parses supported PDF/DOCX/TXT/HTML in an isolated subprocess; blocks unsafe formats with safe parser codes; stores parser metadata on the version.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| Parsers | `src/vyu/ingestion/parsers/{base,pdf,docx,text,html,isolated,_isolated_worker}.py` |
+| Service | `src/vyu/ingestion/service.py` — `_run_document_parsing`, `parsing_passed` events |
+| Settings | `src/vyu/ingestion/settings.py` — `parse_timeout_seconds`, `max_pdf_pages`, `use_isolated_parser` |
+| Tests | `tests/unit/ingestion/test_parsers.py`, `tests/fixtures/ingestion/builders.py`, `tests/integration/ingestion/test_document_parsing.py` |
+
+**Dependencies:** `pypdf`, `python-docx`, `beautifulsoup4`
+
+**Verification:**
+
+```powershell
+uv run pytest tests/unit/ingestion -q
+uv run python scripts/verify.py --scope backend
+uv run pytest tests/integration/ingestion -q
+```
+
+**Remaining (Tasks 7–8):** evidence APIs, operator runbooks.
+
+### 2026-07-07 — Plan 5 Task 6: deduplicate, normalize, chunk, and promote (commit pending)
+
+**Goal:** After parsing, `ingestion.verify` writes normalized JSON and promoted originals to evidence storage, chunks by section, detects workspace duplicates, and marks documents `ready`.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| Chunking | `src/vyu/ingestion/chunking.py` |
+| Repository | `src/vyu/ingestion/repository.py` |
+| Normalization | `src/vyu/ingestion/normalization.py` |
+| Evidence store | `src/vyu/ingestion/object_store.py` — `RecordingEvidenceObjectStore`, promotion helpers |
+| Service | `src/vyu/ingestion/service.py` — `_run_chunk_and_promote`, `duplicate_exact`, `external_id` versioning |
+| Tests | `tests/unit/ingestion/test_chunking.py`, `tests/integration/ingestion/test_chunking_dedup.py` |
+
+**Verification:**
+
+```powershell
+uv run pytest tests/unit/ingestion -q
+uv run python scripts/verify.py --scope backend
+uv run pytest tests/integration/ingestion -q
+```
+
+### 2026-07-07 — Plan 5 Task 7: evidence library and ingestion status APIs (commit pending)
+
+**Goal:** Tenant-scoped evidence document list/detail/version/event routes, safe ingestion job status, workspace-admin reprocess with idempotency, soft-delete retention requests, OpenAPI export, and TypeScript client generation.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| Library service | `src/vyu/ingestion/library.py` |
+| API schemas | `src/vyu/api/schemas/evidence_documents.py` |
+| Routers | `src/vyu/api/routers/evidence_documents.py`, `ingestion_jobs.py` |
+| App wiring | `src/vyu/api/app.py` |
+| OpenAPI / TS | `docs/api/openapi.json`, `scripts/generate_typescript_client.py`, `apps/web/src/lib/api/schema.d.ts` |
+| Tests | `tests/api/test_ingestion_routes.py` |
+
+**Routes:**
+
+- `GET /v1/evidence-documents` — cursor pagination with source/status/media_type/date filters
+- `GET /v1/evidence-documents/{id}` — detail with safe `block_summary` for blocked documents
+- `GET /v1/evidence-documents/{id}/versions`, `.../versions/{version_id}` — chunks only for current ready version
+- `GET /v1/evidence-documents/{id}/events`
+- `GET /v1/ingestion-jobs/{job_id}` — safe step/status/events (no quarantine keys or scanner matches)
+- `POST /v1/evidence-documents/{id}/reprocess` — `MANAGE_WORKSPACE`, idempotency key, new version + verify job
+- `POST /v1/evidence-documents/{id}/retention-request` — soft delete to `deleted`
+
+**Verification:**
+
+```powershell
+uv run pytest tests/api/test_ingestion_routes.py -q
+uv run python scripts/verify.py --scope backend
+uv run python scripts/export_openapi.py --output docs/api/openapi.json
+uv run python scripts/generate_typescript_client.py
+```
+
+**Remaining (Tasks 8–9):** operator runbooks/CLI, staging end-to-end validation.
+
+### 2026-07-07 — Plan 5 Task 8: operator commands and ingestion runbook (commit pending)
+
+**Goal:** Workspace-admin reprocess CLI via API credentials, ingestion operator runbook, ingestion OpenTelemetry metrics, and CloudWatch dashboard/alarm coverage.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| CLI | `scripts/reprocess_document.py` |
+| Runbook | `docs/production/runbooks/ingestion.md` |
+| Metrics | `src/vyu/ingestion/metrics.py`, `src/vyu/ingestion/service.py` |
+| Observability | `infra/terraform/modules/observability/{alarms,dashboards,locals}.tf` |
+| Tests | `tests/deploy/test_reprocess_document.py`, `tests/infra/test_ingestion_observability_policy.py`, `tests/unit/ingestion/test_metrics.py` |
+
+**CLI contract:** requires environment, tenant, workspace, document, optional version, reason, actor, parser/chunker target versions, and `dry-run` / `apply` mode. Uses `VYU_REPROCESS_BEARER_TOKEN` and never writes database tables directly.
+
+**Verification:**
+
+```powershell
+uv run pytest tests/deploy/test_reprocess_document.py tests/infra/test_ingestion_observability_policy.py tests/unit/ingestion/test_metrics.py -q
+uv run python scripts/verify.py --scope backend
+terraform -chdir=infra/terraform/environments/dev init -backend=false
+terraform -chdir=infra/terraform/environments/dev validate
+```
+
+**Remaining (Task 9):** operator staging exercise and Plan 5 exit gate evidence.
+
+### 2026-07-07 — Plan 5 Task 9: end-to-end staging validation (commit pending)
+
+**Goal:** CI integration proof for upload-to-ready across supported formats, blocked malware/PHI fixtures, tenant isolation, duplicate idempotency, presign integrity controls, finalize API, and operator staging validation tooling.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| Finalize API | `POST /v1/uploads/finalize`, `src/vyu/api/routers/uploads.py` |
+| Staging fixtures | `src/vyu/ingestion/staging_fixtures.py` |
+| Staging validator | `scripts/validate_ingestion_staging.py` |
+| CI integration | `tests/integration/ingestion/test_staging_validation.py` |
+| Evidence template | `docs/production/evidence/plan5-staging-validation.template.json` |
+| Runbook | `docs/production/runbooks/ingestion.md` §13 |
+
+**Verification:**
+
+```powershell
+uv run pytest tests/integration/ingestion/test_staging_validation.py -q
+uv run pytest tests/deploy/test_validate_ingestion_staging.py tests/infra/test_ingestion_staging_policy.py -q
+uv run python scripts/verify.py --scope backend
+uv run python scripts/export_openapi.py --output docs/api/openapi.json
+```
+
+**Operator staging (after Plan 4 deploy):**
+
+```powershell
+$env:VYU_INGESTION_STAGING_BEARER_TOKEN = "<token>"
+uv run python scripts/validate_ingestion_staging.py `
+  --environment staging `
+  --base-url https://api.staging.example.com `
+  --output evidence/plan5-staging-validation.json
+```
+
+**Follow-ups:** Plan 5 row remains `in_progress` until operator records staging JSON evidence and confirms ingestion alarms during the runbook exercise.
+
 ---
 
 

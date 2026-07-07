@@ -22,6 +22,9 @@ dependencies = [
   "opentelemetry-api>=1.29,<2",
   "opentelemetry-sdk>=1.29,<2",
   "opentelemetry-exporter-otlp-proto-http>=1.29,<2",
+  "pypdf>=5.4,<6",
+  "python-docx>=1.1,<2",
+  "beautifulsoup4>=4.12,<5",
 ]
 
 [dependency-groups]
@@ -71,7 +74,7 @@ line-ending = "lf"
 
 [tool.mypy]
 python_version = "3.13"
-files = ["src/vyu/api", "src/vyu/auth", "src/vyu/db", "src/vyu/jobs", "src/vyu/research", "scripts/verify.py"]
+files = ["src/vyu/api", "src/vyu/auth", "src/vyu/db", "src/vyu/ingestion", "src/vyu/jobs", "src/vyu/research", "scripts/verify.py"]
 check_untyped_defs = true
 disallow_any_generics = true
 disallow_incomplete_defs = true

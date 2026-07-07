@@ -9,7 +9,7 @@ from src.vyu.api.app import create_app
 def test_error_envelope_shape() -> None:
     engine = create_engine("sqlite+pysqlite:///:memory:")
     client = TestClient(
-        create_app(engine_override=engine, schema_revision_override="0003"),
+        create_app(engine_override=engine, schema_revision_override="0004"),
         raise_server_exceptions=False,
     )
     response = client.get("/v1/missing")

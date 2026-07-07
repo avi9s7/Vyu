@@ -25,5 +25,13 @@ locals {
     "model_cost",
     "audit_failures",
     "backup_status",
+    "ingestion_uploads",
+    "ingestion_scan_latency",
+    "ingestion_malware_infected",
+    "ingestion_phi_blocked",
+    "ingestion_parser_failures",
+    "ingestion_ready_latency",
+    "ingestion_duplicates",
+    "ingestion_quarantine_age",
   ]
 }

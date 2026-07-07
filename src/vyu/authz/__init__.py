@@ -8,6 +8,7 @@ class Action(StrEnum):
     READ_ARTIFACT = "read_artifact"
     READ_AUDIT_EVENT = "read_audit_event"
     RUN_RESEARCH = "run_research"
+    UPLOAD_DOCUMENT = "upload_document"
     REVIEW_OUTPUT = "review_output"
     EXPORT_REPORT = "export_report"
     MANAGE_SOURCES = "manage_sources"
@@ -106,6 +107,7 @@ _DEFAULT_ROLE_PERMISSIONS: dict[Role, frozenset[Action]] = {
             Action.READ_ARTIFACT,
             Action.READ_AUDIT_EVENT,
             Action.RUN_RESEARCH,
+            Action.UPLOAD_DOCUMENT,
         }
     ),
     Role.REVIEWER: frozenset(
@@ -113,6 +115,7 @@ _DEFAULT_ROLE_PERMISSIONS: dict[Role, frozenset[Action]] = {
             Action.READ_ARTIFACT,
             Action.READ_AUDIT_EVENT,
             Action.RUN_RESEARCH,
+            Action.UPLOAD_DOCUMENT,
             Action.REVIEW_OUTPUT,
             Action.EXPORT_REPORT,
         }
@@ -122,6 +125,7 @@ _DEFAULT_ROLE_PERMISSIONS: dict[Role, frozenset[Action]] = {
             Action.READ_ARTIFACT,
             Action.READ_AUDIT_EVENT,
             Action.RUN_RESEARCH,
+            Action.UPLOAD_DOCUMENT,
             Action.REVIEW_OUTPUT,
             Action.EXPORT_REPORT,
             Action.MANAGE_WORKSPACE,

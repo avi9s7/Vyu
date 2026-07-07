@@ -209,6 +209,95 @@ resource "aws_cloudwatch_dashboard" "operations" {
           ]
         }
       },
+      {
+        type   = "metric"
+        x      = 0
+        y      = 30
+        width  = 8
+        height = 6
+        properties = {
+          title  = "Ingestion uploads and bytes"
+          region = var.aws_region
+          metrics = [
+            [local.metric_namespace, "IngestionUploads", { stat = "Sum" }],
+            [".", "IngestionBytes", { stat = "Sum" }],
+          ]
+        }
+      },
+      {
+        type   = "metric"
+        x      = 8
+        y      = 30
+        width  = 8
+        height = 6
+        properties = {
+          title  = "Ingestion scan latency p95"
+          region = var.aws_region
+          metrics = [
+            [local.metric_namespace, "IngestionScanLatencyMs", { stat = "p95" }],
+          ]
+        }
+      },
+      {
+        type   = "metric"
+        x      = 16
+        y      = 30
+        width  = 8
+        height = 6
+        properties = {
+          title  = "Ingestion screening blocks"
+          region = var.aws_region
+          metrics = [
+            [local.metric_namespace, "IngestionMalwareInfected", { stat = "Sum" }],
+            [".", "IngestionPhiBlocked", { stat = "Sum" }],
+            [".", "IngestionPhiUnknown", { stat = "Sum" }],
+            [".", "IngestionScanErrors", { stat = "Sum" }],
+          ]
+        }
+      },
+      {
+        type   = "metric"
+        x      = 0
+        y      = 36
+        width  = 8
+        height = 6
+        properties = {
+          title  = "Ingestion parser failures"
+          region = var.aws_region
+          metrics = [
+            [local.metric_namespace, "IngestionParserFailures", { stat = "Sum" }],
+          ]
+        }
+      },
+      {
+        type   = "metric"
+        x      = 8
+        y      = 36
+        width  = 8
+        height = 6
+        properties = {
+          title  = "Ingestion ready latency p95"
+          region = var.aws_region
+          metrics = [
+            [local.metric_namespace, "IngestionReadyLatencyMs", { stat = "p95" }],
+          ]
+        }
+      },
+      {
+        type   = "metric"
+        x      = 16
+        y      = 36
+        width  = 8
+        height = 6
+        properties = {
+          title  = "Ingestion duplicates and quarantine age"
+          region = var.aws_region
+          metrics = [
+            [local.metric_namespace, "IngestionDuplicates", { stat = "Sum" }],
+            [".", "IngestionQuarantineAgeSeconds", { stat = "p95" }],
+          ]
+        }
+      },
     ]
   })
 }

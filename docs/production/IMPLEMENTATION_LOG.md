@@ -820,6 +820,28 @@ uv run python scripts/validate_ingestion_staging.py `
 
 ---
 
+### 2026-07-08 — Plan 7 Task 3: model gateway config and secret resolution (commit pending)
+
+**Goal:** Load non-secret model gateway settings, resolve provider credentials from Secrets Manager with bounded cache refresh, and fail closed on unsafe staging/production startup.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| Settings | `src/vyu/model_gateway/config.py` |
+| Secrets | `src/vyu/model_gateway/secrets.py` |
+| Example | `config/model_gateway.local.example.env` |
+| Tests | `tests/unit/model_gateway/test_config.py`, `test_secrets.py` |
+
+**Verification:**
+
+```powershell
+uv run python -m unittest tests.unit.model_gateway.test_config tests.unit.model_gateway.test_secrets tests.unit.model_gateway.test_gateway tests.unit.model_gateway.test_contracts -v
+uv run python scripts/verify.py --scope backend
+```
+
+---
+
 ### 2026-07-08 — Plan 7 Task 2: model synthesis persistence (commit pending)
 
 **Goal:** Persist model policy versions, prompt templates, model calls, answers, claims, and citations with RLS and idempotent hashes.

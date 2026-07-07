@@ -1,3 +1,8 @@
+from src.vyu.model_gateway.config import (
+    ModelGatewayConfigError,
+    ModelGatewaySettings,
+    validate_model_gateway_startup,
+)
 from src.vyu.model_gateway.contracts import (
     EmbeddingAdapter,
     EmbeddingRequest,
@@ -21,8 +26,29 @@ from src.vyu.model_gateway.errors import (
     GatewayValidationError,
 )
 from src.vyu.model_gateway.gateway import ModelGateway
+from src.vyu.model_gateway.secrets import (
+    AnthropicCredentials,
+    AzureOpenAICredentials,
+    GoogleCredentials,
+    OpenAICredentials,
+    ProviderCredentials,
+    SecretResolutionError,
+    SecretResolver,
+    SecretRotationRunbook,
+)
 
 __all__ = [
+    "AnthropicCredentials",
+    "AzureOpenAICredentials",
+    "GoogleCredentials",
+    "ModelGatewayConfigError",
+    "ModelGatewaySettings",
+    "OpenAICredentials",
+    "ProviderCredentials",
+    "SecretResolutionError",
+    "SecretResolver",
+    "SecretRotationRunbook",
+    "validate_model_gateway_startup",
     "EmbeddingAdapter",
     "EmbeddingRequest",
     "EmbeddingResponse",

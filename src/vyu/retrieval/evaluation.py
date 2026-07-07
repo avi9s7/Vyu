@@ -31,12 +31,25 @@ def evaluate_golden_questions(
         reciprocal_ranks.append(_mrr_at_k(ranked_document_ids, expected))
         ndcgs.append(_ndcg_at_k(ranked_document_ids, expected))
 
-    return {
+    metrics = {
         f"recall_at_{top_k}": _mean(recalls),
         f"mrr_at_{top_k}": _mean(reciprocal_ranks),
         f"ndcg_at_{top_k}": _mean(ndcgs),
         "question_count": float(len(recalls)),
     }
+    for extra_k in (5, 10, 20):
+        if extra_k == top_k:
+            continue
+        extra_recalls: list[float] = []
+        for question in corpus.golden_questions.values():
+            expected = corpus.expected_documents.get(question.question_id, [])
+            if not expected:
+                continue
+            hits = retriever.search(RetrievalQuery(text=question.question, top_k=extra_k))
+            ranked_document_ids = [hit.document_id for hit in hits[:extra_k]]
+            extra_recalls.append(_recall_at_k(ranked_document_ids, expected))
+        metrics[f"recall_at_{extra_k}"] = _mean(extra_recalls)
+    return metrics
 
 
 def _recall_at_k(ranked: list[str], expected: list[str]) -> float:

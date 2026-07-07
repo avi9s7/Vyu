@@ -7,6 +7,41 @@ from src.vyu.retrieval.contracts import (
 )
 
 
+def reciprocal_rank_fusion_by_passage(
+    ranked_lists: list[list],
+    top_k: int = 10,
+    rank_constant: int = 60,
+) -> list:
+    by_passage: dict[str, object] = {}
+    scores: dict[str, float] = {}
+
+    for ranked_list in ranked_lists:
+        for rank, candidate in enumerate(ranked_list, start=1):
+            passage_id = candidate.passage_id
+            by_passage.setdefault(passage_id, candidate)
+            contribution = 1.0 / (rank_constant + rank)
+            scores[passage_id] = scores.get(passage_id, 0.0) + contribution
+
+    ranked_passage_ids = sorted(scores, key=lambda passage_id: (-scores[passage_id], passage_id))
+    fused: list = []
+    for passage_id in ranked_passage_ids[:top_k]:
+        candidate = by_passage[passage_id]
+        fused.append(
+            type(candidate)(
+                document_id=candidate.document_id,
+                passage_id=candidate.passage_id,
+                document_chunk_id=candidate.document_chunk_id,
+                document_title=candidate.document_title,
+                source_id=candidate.source_id,
+                text=candidate.text,
+                score=scores[passage_id],
+                score_source="rrf",
+                original_rank=candidate.original_rank,
+            )
+        )
+    return fused
+
+
 def reciprocal_rank_fusion(
     ranked_lists: list[list[RetrievalHit]],
     top_k: int = 10,

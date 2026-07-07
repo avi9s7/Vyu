@@ -820,6 +820,53 @@ uv run python scripts/validate_ingestion_staging.py `
 
 ---
 
+### 2026-07-07 — Plan 6 Tasks 6–10: index jobs, hybrid retrieval, APIs, evaluation, staging (commit pending)
+
+**Goal:** Complete deterministic index builds, PostgreSQL hybrid retrieval, evidence/admin APIs, synthetic evaluation gates, and staging validation checklist.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| Index builder | `src/vyu/retrieval/builder.py`, `handler.py`, `snapshot.py` |
+| Hybrid retrieval | `src/vyu/retrieval/postgres.py`, `evaluation_runner.py` |
+| APIs | `src/vyu/api/routers/retrieval.py`, `schemas/retrieval.py`, `service.py` |
+| Worker | `retrieval.index_build` in `src/vyu/jobs/worker.py` |
+| Staging | `scripts/validate_plan6_staging.py`, `tests/integration/retrieval/test_staging_validation.py` |
+
+**Verification:**
+
+```powershell
+uv run python scripts/verify.py --scope backend
+uv run python scripts/validate_plan6_staging.py
+```
+
+---
+
+### 2026-07-07 — Plan 6 Task 5: embedding and index contracts (commit pending)
+
+**Goal:** Define provider-neutral embedding batches, PostgreSQL index manifests, pgvector-backed chunk embeddings, retrieval run persistence, and transactional index activation.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| Embeddings | `src/vyu/retrieval/embeddings.py` |
+| Index contracts | `src/vyu/retrieval/index_contracts.py` |
+| Models | `src/vyu/retrieval/models.py` |
+| Repository | `src/vyu/retrieval/repository.py` |
+| Migration | `src/vyu/migrations/versions/0008_retrieval_indexes.py` |
+| Tests | `tests/test_retrieval_embeddings.py`, `tests/integration/retrieval/` |
+
+**Verification:**
+
+```powershell
+uv run python -m unittest tests.test_retrieval_embeddings -v
+uv run python scripts/verify.py --scope backend
+```
+
+---
+
 ### 2026-07-07 — Plan 6 Task 4: research worker integration (commit pending)
 
 **Goal:** Register the production `research.run` worker handler with persisted plans, tool calls, replay, and run events.

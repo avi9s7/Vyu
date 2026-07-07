@@ -22,6 +22,10 @@ from src.vyu.api.routers.evidence_documents import (
     create_ingestion_jobs_router,
 )
 from src.vyu.api.routers.uploads import create_uploads_router
+from src.vyu.api.routers.retrieval import (
+    create_admin_retrieval_router,
+    create_research_evidence_router,
+)
 from src.vyu.api.settings import ApiSettings
 from src.vyu.auth.settings import AuthSettings
 from src.vyu.db.session import build_engine, build_session_factory
@@ -31,6 +35,8 @@ from src.vyu.ingestion.service import IngestionService
 from src.vyu.ingestion.settings import IngestionSettings
 from src.vyu.research.service import ResearchService
 from src.vyu.research.settings import ResearchSettings
+from src.vyu.retrieval.service import RetrievalService
+from src.vyu.retrieval.settings import RetrievalSettings
 
 
 def current_schema_revision(engine: Engine) -> str:
@@ -61,6 +67,8 @@ def create_app(
     ingestion_settings_override: IngestionSettings | None = None,
     ingestion_service_override: IngestionService | None = None,
     evidence_library_service_override: EvidenceLibraryService | None = None,
+    retrieval_settings_override: RetrievalSettings | None = None,
+    retrieval_service_override: RetrievalService | None = None,
     engine_override: Engine | None = None,
     schema_revision_override: str | None = None,
     session_factory_override: sessionmaker[Session] | None = None,
@@ -82,6 +90,10 @@ def create_app(
     evidence_library_service = evidence_library_service_override or EvidenceLibraryService(
         settings=ingestion_settings
     )
+    retrieval_settings = retrieval_settings_override or RetrievalSettings(env=api_settings.env)
+    retrieval_service = retrieval_service_override or RetrievalService.from_settings(
+        retrieval_settings
+    )
     session_factory = session_factory_override or build_session_factory(engine)
 
     app = FastAPI(title="VYU API", version="0.1.0", openapi_url="/v1/openapi.json")
@@ -94,6 +106,8 @@ def create_app(
     app.state.ingestion_settings = ingestion_settings
     app.state.ingestion_service = ingestion_service
     app.state.evidence_library_service = evidence_library_service
+    app.state.retrieval_settings = retrieval_settings
+    app.state.retrieval_service = retrieval_service
     app.state.engine = engine
     app.state.schema_revision = schema_revision
     app.state.session_factory = session_factory
@@ -167,6 +181,8 @@ def create_app(
     v1.include_router(create_uploads_router())
     v1.include_router(create_evidence_documents_router())
     v1.include_router(create_ingestion_jobs_router())
+    v1.include_router(create_admin_retrieval_router())
+    v1.include_router(create_research_evidence_router())
 
     @v1.get("/debug/boom", include_in_schema=False)
     def debug_boom() -> None:

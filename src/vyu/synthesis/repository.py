@@ -97,6 +97,20 @@ class AnswerRecord:
     prompt_version: str
     evidence_context_sha256: str
     claims: tuple[AnswerClaimDraft, ...]
+    created_at: str | None = None
+
+
+@dataclass(frozen=True)
+class ModelCallMetrics:
+    total_calls: int
+    succeeded_calls: int
+    failed_calls: int
+    blocked_calls: int
+    total_input_tokens: int
+    total_output_tokens: int
+    total_estimated_cost_minor: int
+    average_latency_ms: float | None
+    errors_by_code: dict[str, int]
 
 
 class ModelSynthesisRepository:
@@ -170,6 +184,136 @@ class ModelSynthesisRepository:
         session.flush()
         return _model_policy_record(row)
 
+    def activate_prompt_template(
+        self, session: Session, *, template_id: UUID
+    ) -> PromptTemplateRecord:
+        row = session.scalar(select(PromptTemplate).where(PromptTemplate.id == template_id))
+        if not isinstance(row, PromptTemplate):
+            raise KeyError(f"unknown prompt template: {template_id}")
+        session.execute(
+            update(PromptTemplate)
+            .where(
+                PromptTemplate.status == "active",
+                PromptTemplate.name == row.name,
+                PromptTemplate.use_case == row.use_case,
+            )
+            .values(status="retired")
+        )
+        row.status = "active"
+        row.approved_at = datetime.now(timezone.utc)
+        session.flush()
+        return _prompt_template_record(row)
+
+    def list_model_policies(self, session: Session) -> tuple[ModelPolicyRecord, ...]:
+        rows = session.scalars(
+            select(ModelPolicyVersion).order_by(ModelPolicyVersion.version_number.desc())
+        ).all()
+        return tuple(
+            _model_policy_record(row) for row in rows if isinstance(row, ModelPolicyVersion)
+        )
+
+    def list_prompt_templates(
+        self,
+        session: Session,
+        *,
+        use_case: str | None = None,
+    ) -> tuple[PromptTemplateRecord, ...]:
+        statement = select(PromptTemplate).order_by(
+            PromptTemplate.name.asc(),
+            PromptTemplate.version.desc(),
+        )
+        if use_case is not None:
+            statement = statement.where(PromptTemplate.use_case == use_case)
+        rows = session.scalars(statement).all()
+        return tuple(
+            _prompt_template_record(row) for row in rows if isinstance(row, PromptTemplate)
+        )
+
+    def get_model_call(self, session: Session, *, call_id: UUID) -> ModelCallRecord | None:
+        row = session.scalar(select(ModelCall).where(ModelCall.id == call_id))
+        if not isinstance(row, ModelCall):
+            return None
+        return _model_call_record(row)
+
+    def get_answer_for_research_run(
+        self,
+        session: Session,
+        *,
+        tenant_id: UUID,
+        workspace_id: UUID,
+        research_run_id: UUID,
+        version: int | None = None,
+    ) -> AnswerRecord | None:
+        statement = select(Answer).where(
+            Answer.tenant_id == tenant_id,
+            Answer.workspace_id == workspace_id,
+            Answer.research_run_id == research_run_id,
+        )
+        if version is not None:
+            statement = statement.where(Answer.version == version)
+        else:
+            statement = statement.order_by(Answer.version.desc())
+        row = session.scalar(statement.limit(1))
+        if not isinstance(row, Answer):
+            return None
+        return self.get_answer(session, answer_id=row.id)
+
+    def aggregate_model_call_metrics(
+        self,
+        session: Session,
+        *,
+        tenant_id: UUID,
+        workspace_id: UUID,
+    ) -> ModelCallMetrics:
+        rows = session.scalars(
+            select(ModelCall).where(
+                ModelCall.tenant_id == tenant_id,
+                ModelCall.workspace_id == workspace_id,
+            )
+        ).all()
+        total_calls = 0
+        succeeded_calls = 0
+        failed_calls = 0
+        blocked_calls = 0
+        total_input_tokens = 0
+        total_output_tokens = 0
+        total_estimated_cost_minor = 0
+        latency_total = 0
+        latency_count = 0
+        errors_by_code: dict[str, int] = {}
+        for row in rows:
+            if not isinstance(row, ModelCall):
+                continue
+            total_calls += 1
+            if row.status == "succeeded":
+                succeeded_calls += 1
+            elif row.status == "failed":
+                failed_calls += 1
+            elif row.status == "blocked":
+                blocked_calls += 1
+            usage = dict(row.usage_json)
+            total_input_tokens += int(usage.get("input_tokens", 0) or 0)
+            total_output_tokens += int(usage.get("output_tokens", 0) or 0)
+            if row.estimated_cost_minor is not None:
+                total_estimated_cost_minor += int(row.estimated_cost_minor)
+            if row.latency_ms is not None:
+                latency_total += int(row.latency_ms)
+                latency_count += 1
+            if row.safe_error_code:
+                errors_by_code[row.safe_error_code] = errors_by_code.get(row.safe_error_code, 0) + 1
+        average_latency_ms = latency_total / latency_count if latency_count else None
+        return ModelCallMetrics(
+            total_calls=total_calls,
+            succeeded_calls=succeeded_calls,
+            failed_calls=failed_calls,
+            blocked_calls=blocked_calls,
+            total_input_tokens=total_input_tokens,
+            total_output_tokens=total_output_tokens,
+            total_estimated_cost_minor=total_estimated_cost_minor,
+            average_latency_ms=average_latency_ms,
+            errors_by_code=errors_by_code,
+        )
+
     def create_prompt_template(
         self,
         session: Session,
@@ -240,6 +384,16 @@ class ModelSynthesisRepository:
             )
         )
         if isinstance(existing, ModelCall):
+            if existing.status == "pending" and status != "pending":
+                existing.status = status
+                existing.response_sha256 = response_sha256
+                existing.provider_request_id = provider_request_id
+                existing.safe_error_code = safe_error_code
+                existing.usage_json = dict(usage)
+                existing.latency_ms = latency_ms
+                existing.estimated_cost_minor = estimated_cost_minor
+                existing.currency = currency
+                session.flush()
             return _model_call_record(existing)
         row = ModelCall(
             id=uuid4(),
@@ -383,6 +537,7 @@ class ModelSynthesisRepository:
             prompt_version=row.prompt_version,
             evidence_context_sha256=row.evidence_context_sha256,
             claims=tuple(claims),
+            created_at=row.created_at.isoformat() if row.created_at is not None else None,
         )
 
     def next_answer_version(

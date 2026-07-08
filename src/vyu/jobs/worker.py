@@ -19,9 +19,16 @@ from src.vyu.jobs.models import Job
 from src.vyu.ingestion.handler import IngestionVerifyHandler
 from src.vyu.ingestion.service import IngestionService
 from src.vyu.ingestion.settings import IngestionSettings
+from src.vyu.model_gateway.contracts import ModelPolicy
+from src.vyu.model_gateway.gateway import ModelGateway
 from src.vyu.research.executor import ResearchRunExecutor, ResearchRunHandler
+from src.vyu.research.repository import ResearchExecutionRepository
 from src.vyu.retrieval.builder import IndexBuildExecutor
 from src.vyu.retrieval.handler import IndexBuildHandler
+from src.vyu.synthesis.context import EvidenceContextBuilder
+from src.vyu.synthesis.handler import SynthesisHandler
+from src.vyu.synthesis.repository import ModelSynthesisRepository
+from src.vyu.synthesis.service import SynthesisExecutor, SynthesisSettings
 from src.vyu.jobs.queue import QueueMessage, ReceivedQueueMessage, SqsConsumer
 from src.vyu.jobs.repository import JobRepository, TERMINAL_STATUSES
 
@@ -243,14 +250,33 @@ def build_default_handlers(
     ingestion_service: IngestionService | None = None,
     research_executor: ResearchRunExecutor | None = None,
     index_build_executor: IndexBuildExecutor | None = None,
+    synthesis_executor: SynthesisExecutor | None = None,
 ) -> dict[str, JobHandler]:
     ingestion = ingestion_service or IngestionService.from_settings(IngestionSettings())
     research = research_executor or ResearchRunExecutor()
     index_build = index_build_executor or IndexBuildExecutor()
+    synthesis = synthesis_executor or SynthesisExecutor(
+        gateway=ModelGateway(
+            policy=ModelPolicy(
+                policy_version="worker-default",
+                allowed_providers=frozenset({"deterministic"}),
+                allowed_models=frozenset({"vyu-deterministic-v1"}),
+                allowed_use_cases=frozenset({"grounded_synthesis"}),
+                allowed_prompt_versions=frozenset({"grounded_answer_v1"}),
+            ),
+            generation_adapters={},
+            embedding_adapters={},
+        ),
+        repository=ModelSynthesisRepository(),
+        research_repository=ResearchExecutionRepository(),
+        context_builder=EvidenceContextBuilder(),
+        settings=SynthesisSettings(),
+    )
     return {
         "research.run": ResearchRunHandler(research),
         "ingestion.verify": IngestionVerifyHandler(ingestion),
         "retrieval.index_build": IndexBuildHandler(index_build),
+        "synthesis.run": SynthesisHandler(synthesis),
     }
 
 

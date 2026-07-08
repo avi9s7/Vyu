@@ -820,6 +820,27 @@ uv run python scripts/validate_ingestion_staging.py `
 
 ---
 
+### 2026-07-08 — Plan 7 Task 6: deterministic evidence context builder (commit pending)
+
+**Goal:** Build a bounded, hash-stable synthesis evidence context from persisted retrieval runs with untrusted-data delimiters and deterministic inclusion/exclusion rules.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| Context builder | `src/vyu/synthesis/context.py` |
+| Contracts | `src/vyu/synthesis/contracts.py` |
+| Tests | `tests/unit/synthesis/test_context.py`, `tests/integration/synthesis/test_evidence_context.py` |
+
+**Verification:**
+
+```powershell
+uv run python -m unittest tests.unit.synthesis.test_context -v
+uv run python scripts/verify.py --scope backend
+```
+
+---
+
 ### 2026-07-08 — Plan 7 Task 5: Azure, Anthropic, and Google adapters (commit pending)
 
 **Goal:** Add provider adapters behind the same gateway contracts, map provider-specific failures into gateway errors, and publish the model provider capability matrix.

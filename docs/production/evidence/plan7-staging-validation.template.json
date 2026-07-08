@@ -1,0 +1,75 @@
+{
+  "plan": 7,
+  "title": "Model gateway and grounded synthesis staging validation",
+  "environment": "staging",
+  "git_sha": "",
+  "image_digest": "",
+  "operator": "",
+  "started_at_utc": "",
+  "completed_at_utc": "",
+  "base_url": "https://api.staging.example.com",
+  "validation_command": "uv run python scripts/validate_plan7_staging.py --output evidence/plan7-staging-validation.json",
+  "evaluation_command": "uv run python scripts/run_synthesis_evaluation.py --compare-baseline --output evidence/plan7-synthesis-evaluation.json",
+  "runbook_exercised": false,
+  "alarms_verified": false,
+  "status": "pending",
+  "promotion_binding": {
+    "provider_id": "",
+    "model_id": "",
+    "prompt_version": "",
+    "schema_version": "",
+    "embedding_model": "",
+    "index_manifest_checksum": "",
+    "policy_version": "",
+    "git_sha": "",
+    "image_digest": ""
+  },
+  "checks": [
+    {
+      "name": "synthetic_evaluation_passed",
+      "passed": false,
+      "detail": ""
+    },
+    {
+      "name": "pilot_adjudication_passed",
+      "passed": false,
+      "detail": ""
+    },
+    {
+      "name": "provider_timeout_handled",
+      "passed": false,
+      "detail": ""
+    },
+    {
+      "name": "provider_rate_limit_handled",
+      "passed": false,
+      "detail": ""
+    },
+    {
+      "name": "malformed_output_handled",
+      "passed": false,
+      "detail": ""
+    },
+    {
+      "name": "model_refusal_blocked",
+      "passed": false,
+      "detail": ""
+    },
+    {
+      "name": "secret_rotation_smoke_passed",
+      "passed": false,
+      "detail": ""
+    },
+    {
+      "name": "duplicate_message_idempotent",
+      "passed": false,
+      "detail": ""
+    },
+    {
+      "name": "audit_failure_fail_closed",
+      "passed": false,
+      "detail": ""
+    }
+  ],
+  "notes": "Populate after operator-run staging exercise. CI integration evidence lives in tests/integration/synthesis/test_staging_validation.py and tests/unit/synthesis/test_evaluation_runner.py."
+}

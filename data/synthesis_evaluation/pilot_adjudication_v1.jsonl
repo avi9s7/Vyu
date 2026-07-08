@@ -1,0 +1,6 @@
+{"case_id": "pilot_001", "reviewer_id": "reviewer-a", "accepted": true, "notes": "Citations align with excerpts."}
+{"case_id": "pilot_001", "reviewer_id": "reviewer-b", "accepted": true, "notes": "Agree with supported claims."}
+{"case_id": "pilot_002", "reviewer_id": "reviewer-a", "accepted": true, "notes": "Abstention appropriate for sparse evidence."}
+{"case_id": "pilot_002", "reviewer_id": "reviewer-b", "accepted": true, "notes": "Abstention appropriate."}
+{"case_id": "pilot_003", "reviewer_id": "reviewer-a", "accepted": false, "notes": "Contradiction under-disclosed."}
+{"case_id": "pilot_003", "reviewer_id": "reviewer-b", "accepted": true, "notes": "Contradiction adequately noted."}

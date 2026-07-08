@@ -820,6 +820,103 @@ uv run python scripts/validate_ingestion_staging.py `
 
 ---
 
+### 2026-07-08 — Plan 7 Task 10: synthesis evaluation and staging release gate (commit pending)
+
+**Goal:** Lock synthetic synthesis evaluation metrics, baseline comparison, human adjudication recording, and operator staging evidence for provider/model/prompt promotion.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| Evaluation | `src/vyu/synthesis/evaluation_contracts.py`, `evaluation_dataset.py`, `evaluation_runner.py` |
+| Adjudication | `src/vyu/synthesis/adjudication.py`, `data/synthesis_evaluation/pilot_adjudication_v1.jsonl` |
+| Staging | `src/vyu/synthesis/staging_fixtures.py`, `scripts/validate_plan7_staging.py`, `scripts/run_synthesis_evaluation.py` |
+| Evidence | `docs/production/evidence/plan7-staging-validation.template.json` |
+| Tests | `tests/test_synthesis_evaluation_runner.py`, `tests/integration/synthesis/test_staging_validation.py` |
+
+**Verification:**
+
+```powershell
+uv run python -m unittest tests.test_synthesis_evaluation_runner -v
+uv run python scripts/run_synthesis_evaluation.py --compare-baseline --skip-adjudication
+uv run python scripts/verify.py --scope backend
+```
+
+Plan 7 engineering is complete; operator staging evidence and resolved pilot adjudication are required before marking Plan 7 `complete`.
+
+---
+
+### 2026-07-08 — Plan 7 Task 9: answer API and model-gateway admin (commit pending)
+
+**Goal:** Expose grounded synthesis answers and model-gateway administration through versioned API routes with role checks, idempotent activation, and safe response shaping.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| API service | `src/vyu/synthesis/api_service.py`, `src/vyu/synthesis/settings.py` |
+| Routes/schemas | `src/vyu/api/routers/synthesis.py`, `src/vyu/api/schemas/synthesis.py`, `src/vyu/api/app.py` |
+| Repository | `src/vyu/synthesis/repository.py` |
+| Tests | `tests/unit/synthesis/test_api_service.py`, `tests/api/test_synthesis_routes.py` |
+| OpenAPI/client | `docs/api/openapi.json`, `apps/web/src/lib/api/schema.d.ts` |
+
+**Verification:**
+
+```powershell
+uv run python -m unittest tests.unit.synthesis.test_api_service -v
+uv run python scripts/verify.py --scope backend
+uv run python scripts/export_openapi.py
+uv run python scripts/generate_typescript_client.py
+```
+
+API integration tests in `tests/api/test_synthesis_routes.py` require Docker Postgres or `VYU_MIGRATION_DATABASE_URL` + `VYU_DATABASE_URL`.
+
+---
+
+### 2026-07-08 — Plan 7 Task 8: synthesis service and worker validation (commit pending)
+
+**Goal:** Run grounded synthesis in the worker with post-generation validation, schema repair, provider fallback, transactional persistence, and governance outbox enqueue.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| Service | `src/vyu/synthesis/service.py` |
+| Validators | `src/vyu/synthesis/validators.py` |
+| Worker handler | `src/vyu/synthesis/handler.py`, `src/vyu/jobs/worker.py` |
+| Tests | `tests/unit/synthesis/test_validators.py`, `tests/unit/synthesis/test_service.py` |
+
+**Verification:**
+
+```powershell
+uv run python -m unittest tests.unit.synthesis.test_validators tests.unit.synthesis.test_service -v
+uv run python scripts/verify.py --scope backend
+```
+
+---
+
+### 2026-07-08 — Plan 7 Task 7: grounded answer schema and prompt (commit pending)
+
+**Goal:** Define the versioned grounded synthesis JSON schema, system prompt, and semantic validation rules for citation-bound model output.
+
+**Key paths:**
+
+| Area | Paths |
+| --- | --- |
+| Contracts | `src/vyu/synthesis/contracts.py` |
+| Prompt config | `src/vyu/synthesis/prompt_config.py` |
+| Schema validation | `src/vyu/synthesis/schema.py` |
+| Tests | `tests/unit/synthesis/test_grounded_answer_schema.py` |
+
+**Verification:**
+
+```powershell
+uv run python -m unittest tests.unit.synthesis.test_grounded_answer_schema -v
+uv run python scripts/verify.py --scope backend
+```
+
+---
+
 ### 2026-07-08 — Plan 7 Task 6: deterministic evidence context builder (commit pending)
 
 **Goal:** Build a bounded, hash-stable synthesis evidence context from persisted retrieval runs with untrusted-data delimiters and deterministic inclusion/exclusion rules.

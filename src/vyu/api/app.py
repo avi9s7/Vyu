@@ -26,6 +26,10 @@ from src.vyu.api.routers.retrieval import (
     create_admin_retrieval_router,
     create_research_evidence_router,
 )
+from src.vyu.api.routers.synthesis import (
+    create_model_gateway_admin_router,
+    create_research_answer_router,
+)
 from src.vyu.api.settings import ApiSettings
 from src.vyu.auth.settings import AuthSettings
 from src.vyu.db.session import build_engine, build_session_factory
@@ -33,10 +37,15 @@ from src.vyu.db.settings import DatabaseSettings
 from src.vyu.ingestion.library import EvidenceLibraryService
 from src.vyu.ingestion.service import IngestionService
 from src.vyu.ingestion.settings import IngestionSettings
+from src.vyu.model_gateway.contracts import ModelPolicy
+from src.vyu.model_gateway.gateway import ModelGateway
 from src.vyu.research.service import ResearchService
 from src.vyu.research.settings import ResearchSettings
 from src.vyu.retrieval.service import RetrievalService
 from src.vyu.retrieval.settings import RetrievalSettings
+from src.vyu.synthesis.api_service import SynthesisApiService
+from src.vyu.synthesis.contracts import GROUNDED_ANSWER_SCHEMA_VERSION, GROUNDED_SYNTHESIS_USE_CASE
+from src.vyu.synthesis.settings import SynthesisApiSettings
 
 
 def current_schema_revision(engine: Engine) -> str:
@@ -69,6 +78,9 @@ def create_app(
     evidence_library_service_override: EvidenceLibraryService | None = None,
     retrieval_settings_override: RetrievalSettings | None = None,
     retrieval_service_override: RetrievalService | None = None,
+    synthesis_api_settings_override: SynthesisApiSettings | None = None,
+    synthesis_api_service_override: SynthesisApiService | None = None,
+    model_gateway_override: ModelGateway | None = None,
     engine_override: Engine | None = None,
     schema_revision_override: str | None = None,
     session_factory_override: sessionmaker[Session] | None = None,
@@ -94,6 +106,24 @@ def create_app(
     retrieval_service = retrieval_service_override or RetrievalService.from_settings(
         retrieval_settings
     )
+    synthesis_api_settings = synthesis_api_settings_override or SynthesisApiSettings(
+        env=api_settings.env
+    )
+    model_gateway = model_gateway_override or ModelGateway(
+        policy=ModelPolicy(
+            policy_version="api-default",
+            allowed_providers=frozenset({"deterministic"}),
+            allowed_models=frozenset({"vyu-deterministic-v1"}),
+            allowed_use_cases=frozenset({GROUNDED_SYNTHESIS_USE_CASE}),
+            allowed_prompt_versions=frozenset({GROUNDED_ANSWER_SCHEMA_VERSION}),
+        ),
+        generation_adapters={},
+        embedding_adapters={},
+    )
+    synthesis_api_service = synthesis_api_service_override or SynthesisApiService.from_settings(
+        synthesis_api_settings,
+        gateway=model_gateway,
+    )
     session_factory = session_factory_override or build_session_factory(engine)
 
     app = FastAPI(title="VYU API", version="0.1.0", openapi_url="/v1/openapi.json")
@@ -108,6 +138,9 @@ def create_app(
     app.state.evidence_library_service = evidence_library_service
     app.state.retrieval_settings = retrieval_settings
     app.state.retrieval_service = retrieval_service
+    app.state.synthesis_api_settings = synthesis_api_settings
+    app.state.synthesis_api_service = synthesis_api_service
+    app.state.model_gateway = model_gateway
     app.state.engine = engine
     app.state.schema_revision = schema_revision
     app.state.session_factory = session_factory
@@ -183,6 +216,8 @@ def create_app(
     v1.include_router(create_ingestion_jobs_router())
     v1.include_router(create_admin_retrieval_router())
     v1.include_router(create_research_evidence_router())
+    v1.include_router(create_research_answer_router())
+    v1.include_router(create_model_gateway_admin_router())
 
     @v1.get("/debug/boom", include_in_schema=False)
     def debug_boom() -> None:

@@ -1,6 +1,222 @@
 {
   "components": {
     "schemas": {
+      "ActivatePolicyRequest": {
+        "properties": {
+          "approved_evaluation_id": {
+            "maxLength": 128,
+            "minLength": 3,
+            "title": "Approved Evaluation Id",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 500,
+            "minLength": 3,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason",
+          "approved_evaluation_id"
+        ],
+        "title": "ActivatePolicyRequest",
+        "type": "object"
+      },
+      "ActivatePromptRequest": {
+        "properties": {
+          "approved_evaluation_id": {
+            "maxLength": 128,
+            "minLength": 3,
+            "title": "Approved Evaluation Id",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 500,
+            "minLength": 3,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason",
+          "approved_evaluation_id"
+        ],
+        "title": "ActivatePromptRequest",
+        "type": "object"
+      },
+      "ActivationResponse": {
+        "properties": {
+          "approved_evaluation_id": {
+            "title": "Approved Evaluation Id",
+            "type": "string"
+          },
+          "resource_id": {
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "resource_id",
+          "status",
+          "approved_evaluation_id"
+        ],
+        "title": "ActivationResponse",
+        "type": "object"
+      },
+      "AnswerCitationItem": {
+        "properties": {
+          "chunk_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chunk Id"
+          },
+          "citation_id": {
+            "title": "Citation Id",
+            "type": "string"
+          },
+          "document_version_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Version Id"
+          }
+        },
+        "required": [
+          "citation_id"
+        ],
+        "title": "AnswerCitationItem",
+        "type": "object"
+      },
+      "AnswerClaimItem": {
+        "properties": {
+          "citation_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Citation Ids",
+            "type": "array"
+          },
+          "citations": {
+            "items": {
+              "$ref": "#/components/schemas/AnswerCitationItem"
+            },
+            "title": "Citations",
+            "type": "array"
+          },
+          "claim_text": {
+            "title": "Claim Text",
+            "type": "string"
+          },
+          "ordinal": {
+            "title": "Ordinal",
+            "type": "integer"
+          },
+          "support_status": {
+            "title": "Support Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ordinal",
+          "claim_text",
+          "support_status",
+          "citation_ids"
+        ],
+        "title": "AnswerClaimItem",
+        "type": "object"
+      },
+      "AnswerVersionLinks": {
+        "properties": {
+          "governance": {
+            "title": "Governance",
+            "type": "string"
+          },
+          "research_search": {
+            "title": "Research Search",
+            "type": "string"
+          },
+          "review_queue": {
+            "title": "Review Queue",
+            "type": "string"
+          },
+          "self": {
+            "title": "Self",
+            "type": "string"
+          }
+        },
+        "required": [
+          "self",
+          "research_search",
+          "review_queue",
+          "governance"
+        ],
+        "title": "AnswerVersionLinks",
+        "type": "object"
+      },
+      "CreateIndexBuildRequest": {
+        "properties": {
+          "policy_version": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Policy Version",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "source_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Ids"
+          },
+          "use_case": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Use Case"
+          }
+        },
+        "required": [
+          "policy_version",
+          "reason"
+        ],
+        "title": "CreateIndexBuildRequest",
+        "type": "object"
+      },
       "CreateResearchSearchRequest": {
         "properties": {
           "comparator": {
@@ -773,6 +989,99 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "IndexBuildCreatedResponse": {
+        "properties": {
+          "job_id": {
+            "format": "uuid",
+            "title": "Job Id",
+            "type": "string"
+          },
+          "links": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Links",
+            "type": "object"
+          },
+          "retrieval_index_id": {
+            "format": "uuid",
+            "title": "Retrieval Index Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "retrieval_index_id",
+          "job_id",
+          "status",
+          "links"
+        ],
+        "title": "IndexBuildCreatedResponse",
+        "type": "object"
+      },
+      "IndexRecordListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/IndexRecordSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "IndexRecordListResponse",
+        "type": "object"
+      },
+      "IndexRecordSummary": {
+        "properties": {
+          "chunk_count": {
+            "title": "Chunk Count",
+            "type": "integer"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "document_count": {
+            "title": "Document Count",
+            "type": "integer"
+          },
+          "manifest_checksum": {
+            "title": "Manifest Checksum",
+            "type": "string"
+          },
+          "retrieval_index_id": {
+            "format": "uuid",
+            "title": "Retrieval Index Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "use_case": {
+            "title": "Use Case",
+            "type": "string"
+          }
+        },
+        "required": [
+          "retrieval_index_id",
+          "status",
+          "use_case",
+          "manifest_checksum",
+          "document_count",
+          "chunk_count",
+          "created_at"
+        ],
+        "title": "IndexRecordSummary",
+        "type": "object"
+      },
       "IngestionJobDetailResponse": {
         "properties": {
           "attempt": {
@@ -897,6 +1206,131 @@
         "title": "IngestionJobEventItem",
         "type": "object"
       },
+      "ModelGatewayOverviewResponse": {
+        "properties": {
+          "active_policy_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Policy Version"
+          },
+          "active_prompt_count": {
+            "title": "Active Prompt Count",
+            "type": "integer"
+          },
+          "evaluation_status": {
+            "title": "Evaluation Status",
+            "type": "string"
+          },
+          "metrics": {
+            "additionalProperties": true,
+            "title": "Metrics",
+            "type": "object"
+          }
+        },
+        "required": [
+          "metrics",
+          "active_prompt_count",
+          "evaluation_status"
+        ],
+        "title": "ModelGatewayOverviewResponse",
+        "type": "object"
+      },
+      "ModelPolicyListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ModelPolicySummary"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ModelPolicyListResponse",
+        "type": "object"
+      },
+      "ModelPolicySummary": {
+        "properties": {
+          "allowed_models": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Allowed Models",
+            "type": "array"
+          },
+          "allowed_providers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Allowed Providers",
+            "type": "array"
+          },
+          "approved_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
+          "approved_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved By"
+          },
+          "policy_id": {
+            "title": "Policy Id",
+            "type": "string"
+          },
+          "sha256": {
+            "title": "Sha256",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "use_cases": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Use Cases",
+            "type": "array"
+          },
+          "version_number": {
+            "title": "Version Number",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "policy_id",
+          "version_number",
+          "status",
+          "allowed_providers",
+          "allowed_models",
+          "use_cases",
+          "sha256"
+        ],
+        "title": "ModelPolicySummary",
+        "type": "object"
+      },
       "PresignUploadRequest": {
         "properties": {
           "contains_phi": {
@@ -1002,6 +1436,132 @@
         "title": "PresignUploadResponse",
         "type": "object"
       },
+      "PromptTemplateListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PromptTemplateSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "PromptTemplateListResponse",
+        "type": "object"
+      },
+      "PromptTemplateSummary": {
+        "properties": {
+          "approved_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
+          "approved_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved By"
+          },
+          "evaluation_status": {
+            "title": "Evaluation Status",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "sha256": {
+            "title": "Sha256",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "template_id": {
+            "title": "Template Id",
+            "type": "string"
+          },
+          "use_case": {
+            "title": "Use Case",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "template_id",
+          "name",
+          "use_case",
+          "version",
+          "status",
+          "sha256",
+          "evaluation_status"
+        ],
+        "title": "PromptTemplateSummary",
+        "type": "object"
+      },
+      "ProviderHealthItem": {
+        "properties": {
+          "checked_at": {
+            "title": "Checked At",
+            "type": "string"
+          },
+          "latency_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latency Ms"
+          },
+          "provider_id": {
+            "title": "Provider Id",
+            "type": "string"
+          },
+          "safe_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Safe Code"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider_id",
+          "status",
+          "checked_at"
+        ],
+        "title": "ProviderHealthItem",
+        "type": "object"
+      },
       "ReprocessDocumentRequest": {
         "properties": {
           "target_chunker_version": {
@@ -1067,6 +1627,138 @@
           "idempotent"
         ],
         "title": "ReprocessDocumentResponse",
+        "type": "object"
+      },
+      "ResearchAnswerResponse": {
+        "properties": {
+          "answer_id": {
+            "title": "Answer Id",
+            "type": "string"
+          },
+          "answer_summary": {
+            "title": "Answer Summary",
+            "type": "string"
+          },
+          "claims": {
+            "items": {
+              "$ref": "#/components/schemas/AnswerClaimItem"
+            },
+            "title": "Claims",
+            "type": "array"
+          },
+          "contradictions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Contradictions",
+            "type": "array"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "evidence_context_sha256": {
+            "title": "Evidence Context Sha256",
+            "type": "string"
+          },
+          "index_manifest_checksum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Index Manifest Checksum"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "links": {
+            "$ref": "#/components/schemas/AnswerVersionLinks"
+          },
+          "model_id": {
+            "title": "Model Id",
+            "type": "string"
+          },
+          "model_provider_id": {
+            "title": "Model Provider Id",
+            "type": "string"
+          },
+          "policy_version": {
+            "title": "Policy Version",
+            "type": "string"
+          },
+          "prompt_version": {
+            "title": "Prompt Version",
+            "type": "string"
+          },
+          "research_run_id": {
+            "title": "Research Run Id",
+            "type": "string"
+          },
+          "retrieval_index_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retrieval Index Id"
+          },
+          "retrieval_run_id": {
+            "title": "Retrieval Run Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "uncertainty": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uncertainty"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "answer_id",
+          "research_run_id",
+          "retrieval_run_id",
+          "version",
+          "status",
+          "answer_summary",
+          "model_provider_id",
+          "model_id",
+          "prompt_version",
+          "policy_version",
+          "evidence_context_sha256",
+          "links"
+        ],
+        "title": "ResearchAnswerResponse",
         "type": "object"
       },
       "ResearchCancelResponse": {
@@ -1150,6 +1842,103 @@
           "items"
         ],
         "title": "ResearchEventListResponse",
+        "type": "object"
+      },
+      "ResearchEvidenceExclusionSummary": {
+        "properties": {
+          "kinds": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Kinds",
+            "type": "object"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "kinds"
+        ],
+        "title": "ResearchEvidenceExclusionSummary",
+        "type": "object"
+      },
+      "ResearchEvidenceItem": {
+        "properties": {
+          "citation_id": {
+            "title": "Citation Id",
+            "type": "string"
+          },
+          "document_id": {
+            "title": "Document Id",
+            "type": "string"
+          },
+          "rank": {
+            "title": "Rank",
+            "type": "integer"
+          },
+          "retrieval_index_id": {
+            "format": "uuid",
+            "title": "Retrieval Index Id",
+            "type": "string"
+          },
+          "retrieval_run_id": {
+            "format": "uuid",
+            "title": "Retrieval Run Id",
+            "type": "string"
+          },
+          "score_source": {
+            "title": "Score Source",
+            "type": "string"
+          },
+          "score_value": {
+            "title": "Score Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "citation_id",
+          "document_id",
+          "rank",
+          "score_source",
+          "score_value",
+          "retrieval_index_id",
+          "retrieval_run_id"
+        ],
+        "title": "ResearchEvidenceItem",
+        "type": "object"
+      },
+      "ResearchEvidenceListResponse": {
+        "properties": {
+          "abstention_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Abstention Reason"
+          },
+          "exclusions": {
+            "$ref": "#/components/schemas/ResearchEvidenceExclusionSummary"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ResearchEvidenceItem"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items",
+          "exclusions"
+        ],
+        "title": "ResearchEvidenceListResponse",
         "type": "object"
       },
       "ResearchSearchCreatedResponse": {
@@ -1469,6 +2258,352 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/v1/admin/model-gateway/health": {
+      "get": {
+        "operationId": "list_provider_health_v1_admin_model_gateway_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProviderHealthItem"
+                  },
+                  "title": "Response List Provider Health V1 Admin Model Gateway Health Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Provider Health",
+        "tags": [
+          "model-gateway-admin"
+        ]
+      }
+    },
+    "/v1/admin/model-gateway/overview": {
+      "get": {
+        "operationId": "get_model_gateway_overview_v1_admin_model_gateway_overview_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelGatewayOverviewResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Model Gateway Overview",
+        "tags": [
+          "model-gateway-admin"
+        ]
+      }
+    },
+    "/v1/admin/model-gateway/policies": {
+      "get": {
+        "operationId": "list_model_policies_v1_admin_model_gateway_policies_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelPolicyListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Model Policies",
+        "tags": [
+          "model-gateway-admin"
+        ]
+      }
+    },
+    "/v1/admin/model-gateway/policies/{policy_id}/activate": {
+      "post": {
+        "operationId": "activate_model_policy_v1_admin_model_gateway_policies__policy_id__activate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "policy_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Policy Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivatePolicyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Activate Model Policy",
+        "tags": [
+          "model-gateway-admin"
+        ]
+      }
+    },
+    "/v1/admin/model-gateway/prompts": {
+      "get": {
+        "operationId": "list_prompt_templates_v1_admin_model_gateway_prompts_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptTemplateListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Prompt Templates",
+        "tags": [
+          "model-gateway-admin"
+        ]
+      }
+    },
+    "/v1/admin/model-gateway/prompts/{template_id}/activate": {
+      "post": {
+        "operationId": "activate_prompt_template_v1_admin_model_gateway_prompts__template_id__activate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "template_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Template Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivatePromptRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Activate Prompt Template",
+        "tags": [
+          "model-gateway-admin"
+        ]
+      }
+    },
+    "/v1/admin/retrieval/indexes": {
+      "get": {
+        "operationId": "list_retrieval_indexes_v1_admin_retrieval_indexes_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndexRecordListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Retrieval Indexes",
+        "tags": [
+          "retrieval-admin"
+        ]
+      }
+    },
+    "/v1/admin/retrieval/indexes/build": {
+      "post": {
+        "operationId": "build_retrieval_index_v1_admin_retrieval_indexes_build_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIndexBuildRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndexBuildCreatedResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Build Retrieval Index",
+        "tags": [
+          "retrieval-admin"
+        ]
+      }
+    },
     "/v1/evidence-documents": {
       "get": {
         "operationId": "list_evidence_documents_v1_evidence_documents_get",
@@ -2217,6 +3352,66 @@
         ]
       }
     },
+    "/v1/research/searches/{search_id}/answer": {
+      "get": {
+        "operationId": "get_research_search_answer_v1_research_searches__search_id__answer_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "search_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Search Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "version",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Version"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResearchAnswerResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Research Search Answer",
+        "tags": [
+          "research"
+        ]
+      }
+    },
     "/v1/research/searches/{search_id}/cancel": {
       "post": {
         "operationId": "cancel_research_search_v1_research_searches__search_id__cancel_post",
@@ -2326,6 +3521,77 @@
           }
         },
         "summary": "List Research Search Events",
+        "tags": [
+          "research"
+        ]
+      }
+    },
+    "/v1/research/searches/{search_id}/evidence": {
+      "get": {
+        "operationId": "list_research_search_evidence_v1_research_searches__search_id__evidence_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "search_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Search Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResearchEvidenceListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Research Search Evidence",
         "tags": [
           "research"
         ]

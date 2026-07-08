@@ -4,6 +4,142 @@
  */
 
 export interface paths {
+    "/v1/admin/model-gateway/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Provider Health */
+        get: operations["list_provider_health_v1_admin_model_gateway_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/model-gateway/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Model Gateway Overview */
+        get: operations["get_model_gateway_overview_v1_admin_model_gateway_overview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/model-gateway/policies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Model Policies */
+        get: operations["list_model_policies_v1_admin_model_gateway_policies_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/model-gateway/policies/{policy_id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Activate Model Policy */
+        post: operations["activate_model_policy_v1_admin_model_gateway_policies__policy_id__activate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/model-gateway/prompts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Prompt Templates */
+        get: operations["list_prompt_templates_v1_admin_model_gateway_prompts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/model-gateway/prompts/{template_id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Activate Prompt Template */
+        post: operations["activate_prompt_template_v1_admin_model_gateway_prompts__template_id__activate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/retrieval/indexes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Retrieval Indexes */
+        get: operations["list_retrieval_indexes_v1_admin_retrieval_indexes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/retrieval/indexes/build": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Build Retrieval Index */
+        post: operations["build_retrieval_index_v1_admin_retrieval_indexes_build_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/evidence-documents": {
         parameters: {
             query?: never;
@@ -226,6 +362,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/research/searches/{search_id}/answer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Research Search Answer */
+        get: operations["get_research_search_answer_v1_research_searches__search_id__answer_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/research/searches/{search_id}/cancel": {
         parameters: {
             query?: never;
@@ -252,6 +405,23 @@ export interface paths {
         };
         /** List Research Search Events */
         get: operations["list_research_search_events_v1_research_searches__search_id__events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/research/searches/{search_id}/evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Research Search Evidence */
+        get: operations["list_research_search_evidence_v1_research_searches__search_id__evidence_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -315,6 +485,73 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** ActivatePolicyRequest */
+        ActivatePolicyRequest: {
+            /** Approved Evaluation Id */
+            approved_evaluation_id: string;
+            /** Reason */
+            reason: string;
+        };
+        /** ActivatePromptRequest */
+        ActivatePromptRequest: {
+            /** Approved Evaluation Id */
+            approved_evaluation_id: string;
+            /** Reason */
+            reason: string;
+        };
+        /** ActivationResponse */
+        ActivationResponse: {
+            /** Approved Evaluation Id */
+            approved_evaluation_id: string;
+            /** Resource Id */
+            resource_id: string;
+            /** Status */
+            status: string;
+        };
+        /** AnswerCitationItem */
+        AnswerCitationItem: {
+            /** Chunk Id */
+            chunk_id?: string | null;
+            /** Citation Id */
+            citation_id: string;
+            /** Document Version Id */
+            document_version_id?: string | null;
+        };
+        /** AnswerClaimItem */
+        AnswerClaimItem: {
+            /** Citation Ids */
+            citation_ids: string[];
+            /** Citations */
+            citations?: components["schemas"]["AnswerCitationItem"][];
+            /** Claim Text */
+            claim_text: string;
+            /** Ordinal */
+            ordinal: number;
+            /** Support Status */
+            support_status: string;
+        };
+        /** AnswerVersionLinks */
+        AnswerVersionLinks: {
+            /** Governance */
+            governance: string;
+            /** Research Search */
+            research_search: string;
+            /** Review Queue */
+            review_queue: string;
+            /** Self */
+            self: string;
+        };
+        /** CreateIndexBuildRequest */
+        CreateIndexBuildRequest: {
+            /** Policy Version */
+            policy_version: string;
+            /** Reason */
+            reason: string;
+            /** Source Ids */
+            source_ids?: string[] | null;
+            /** Use Case */
+            use_case?: string | null;
+        };
         /** CreateResearchSearchRequest */
         CreateResearchSearchRequest: {
             /** Comparator */
@@ -529,6 +766,50 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** IndexBuildCreatedResponse */
+        IndexBuildCreatedResponse: {
+            /**
+             * Job Id
+             * Format: uuid
+             */
+            job_id: string;
+            /** Links */
+            links: {
+                [key: string]: string;
+            };
+            /**
+             * Retrieval Index Id
+             * Format: uuid
+             */
+            retrieval_index_id: string;
+            /** Status */
+            status: string;
+        };
+        /** IndexRecordListResponse */
+        IndexRecordListResponse: {
+            /** Items */
+            items: components["schemas"]["IndexRecordSummary"][];
+        };
+        /** IndexRecordSummary */
+        IndexRecordSummary: {
+            /** Chunk Count */
+            chunk_count: number;
+            /** Created At */
+            created_at: string;
+            /** Document Count */
+            document_count: number;
+            /** Manifest Checksum */
+            manifest_checksum: string;
+            /**
+             * Retrieval Index Id
+             * Format: uuid
+             */
+            retrieval_index_id: string;
+            /** Status */
+            status: string;
+            /** Use Case */
+            use_case: string;
+        };
         /** IngestionJobDetailResponse */
         IngestionJobDetailResponse: {
             /** Attempt */
@@ -569,6 +850,45 @@ export interface components {
             /** Status */
             status: string;
         };
+        /** ModelGatewayOverviewResponse */
+        ModelGatewayOverviewResponse: {
+            /** Active Policy Version */
+            active_policy_version?: number | null;
+            /** Active Prompt Count */
+            active_prompt_count: number;
+            /** Evaluation Status */
+            evaluation_status: string;
+            /** Metrics */
+            metrics: {
+                [key: string]: unknown;
+            };
+        };
+        /** ModelPolicyListResponse */
+        ModelPolicyListResponse: {
+            /** Items */
+            items: components["schemas"]["ModelPolicySummary"][];
+        };
+        /** ModelPolicySummary */
+        ModelPolicySummary: {
+            /** Allowed Models */
+            allowed_models: string[];
+            /** Allowed Providers */
+            allowed_providers: string[];
+            /** Approved At */
+            approved_at?: string | null;
+            /** Approved By */
+            approved_by?: string | null;
+            /** Policy Id */
+            policy_id: string;
+            /** Sha256 */
+            sha256: string;
+            /** Status */
+            status: string;
+            /** Use Cases */
+            use_cases: string[];
+            /** Version Number */
+            version_number: number;
+        };
         /** PresignUploadRequest */
         PresignUploadRequest: {
             /** Contains Phi */
@@ -605,6 +925,45 @@ export interface components {
             /** Version Id */
             version_id: string;
         };
+        /** PromptTemplateListResponse */
+        PromptTemplateListResponse: {
+            /** Items */
+            items: components["schemas"]["PromptTemplateSummary"][];
+        };
+        /** PromptTemplateSummary */
+        PromptTemplateSummary: {
+            /** Approved At */
+            approved_at?: string | null;
+            /** Approved By */
+            approved_by?: string | null;
+            /** Evaluation Status */
+            evaluation_status: string;
+            /** Name */
+            name: string;
+            /** Sha256 */
+            sha256: string;
+            /** Status */
+            status: string;
+            /** Template Id */
+            template_id: string;
+            /** Use Case */
+            use_case: string;
+            /** Version */
+            version: number;
+        };
+        /** ProviderHealthItem */
+        ProviderHealthItem: {
+            /** Checked At */
+            checked_at: string;
+            /** Latency Ms */
+            latency_ms?: number | null;
+            /** Provider Id */
+            provider_id: string;
+            /** Safe Code */
+            safe_code?: string | null;
+            /** Status */
+            status: string;
+        };
         /** ReprocessDocumentRequest */
         ReprocessDocumentRequest: {
             /** Target Chunker Version */
@@ -626,6 +985,46 @@ export interface components {
             status: string;
             /** Version Id */
             version_id: string;
+        };
+        /** ResearchAnswerResponse */
+        ResearchAnswerResponse: {
+            /** Answer Id */
+            answer_id: string;
+            /** Answer Summary */
+            answer_summary: string;
+            /** Claims */
+            claims?: components["schemas"]["AnswerClaimItem"][];
+            /** Contradictions */
+            contradictions?: string[];
+            /** Created At */
+            created_at?: string | null;
+            /** Evidence Context Sha256 */
+            evidence_context_sha256: string;
+            /** Index Manifest Checksum */
+            index_manifest_checksum?: string | null;
+            /** Limitations */
+            limitations?: string[];
+            links: components["schemas"]["AnswerVersionLinks"];
+            /** Model Id */
+            model_id: string;
+            /** Model Provider Id */
+            model_provider_id: string;
+            /** Policy Version */
+            policy_version: string;
+            /** Prompt Version */
+            prompt_version: string;
+            /** Research Run Id */
+            research_run_id: string;
+            /** Retrieval Index Id */
+            retrieval_index_id?: string | null;
+            /** Retrieval Run Id */
+            retrieval_run_id: string;
+            /** Status */
+            status: string;
+            /** Uncertainty */
+            uncertainty?: string | null;
+            /** Version */
+            version: number;
         };
         /** ResearchCancelResponse */
         ResearchCancelResponse: {
@@ -657,6 +1056,46 @@ export interface components {
             items: components["schemas"]["ResearchEventItem"][];
             /** Next Cursor */
             next_cursor?: string | null;
+        };
+        /** ResearchEvidenceExclusionSummary */
+        ResearchEvidenceExclusionSummary: {
+            /** Kinds */
+            kinds: {
+                [key: string]: number;
+            };
+            /** Total */
+            total: number;
+        };
+        /** ResearchEvidenceItem */
+        ResearchEvidenceItem: {
+            /** Citation Id */
+            citation_id: string;
+            /** Document Id */
+            document_id: string;
+            /** Rank */
+            rank: number;
+            /**
+             * Retrieval Index Id
+             * Format: uuid
+             */
+            retrieval_index_id: string;
+            /**
+             * Retrieval Run Id
+             * Format: uuid
+             */
+            retrieval_run_id: string;
+            /** Score Source */
+            score_source: string;
+            /** Score Value */
+            score_value: number;
+        };
+        /** ResearchEvidenceListResponse */
+        ResearchEvidenceListResponse: {
+            /** Abstention Reason */
+            abstention_reason?: string | null;
+            exclusions: components["schemas"]["ResearchEvidenceExclusionSummary"];
+            /** Items */
+            items: components["schemas"]["ResearchEvidenceItem"][];
         };
         /** ResearchSearchCreatedResponse */
         ResearchSearchCreatedResponse: {
@@ -766,6 +1205,227 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    list_provider_health_v1_admin_model_gateway_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderHealthItem"][];
+                };
+            };
+        };
+    };
+    get_model_gateway_overview_v1_admin_model_gateway_overview_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelGatewayOverviewResponse"];
+                };
+            };
+        };
+    };
+    list_model_policies_v1_admin_model_gateway_policies_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelPolicyListResponse"];
+                };
+            };
+        };
+    };
+    activate_model_policy_v1_admin_model_gateway_policies__policy_id__activate_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                policy_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivatePolicyRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivationResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_prompt_templates_v1_admin_model_gateway_prompts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PromptTemplateListResponse"];
+                };
+            };
+        };
+    };
+    activate_prompt_template_v1_admin_model_gateway_prompts__template_id__activate_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                template_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivatePromptRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivationResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_retrieval_indexes_v1_admin_retrieval_indexes_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IndexRecordListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    build_retrieval_index_v1_admin_retrieval_indexes_build_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateIndexBuildRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IndexBuildCreatedResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_evidence_documents_v1_evidence_documents_get: {
         parameters: {
             query?: {
@@ -1196,6 +1856,39 @@ export interface operations {
             };
         };
     };
+    get_research_search_answer_v1_research_searches__search_id__answer_get: {
+        parameters: {
+            query?: {
+                version?: number | null;
+            };
+            header?: never;
+            path: {
+                search_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResearchAnswerResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     cancel_research_search_v1_research_searches__search_id__cancel_post: {
         parameters: {
             query?: never;
@@ -1248,6 +1941,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResearchEventListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_research_search_evidence_v1_research_searches__search_id__evidence_get: {
+        parameters: {
+            query?: {
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                search_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResearchEvidenceListResponse"];
                 };
             };
             /** @description Validation Error */

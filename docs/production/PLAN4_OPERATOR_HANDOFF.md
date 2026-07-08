@@ -73,7 +73,8 @@ Plan 4 **code delivery** is complete on `main` (Tasks 1–10, bootstrap stack, C
 
 - `terraform` — installed
 - `uv`, `gh` — installed
-- `aws` CLI — **not installed**
+- `aws` CLI — installed (`aws-cli/2.35.17` at `C:\Program Files\Amazon\AWSCLIV2\aws.exe`)
+- AWS credentials — **not configured** (`aws sts get-caller-identity` fails with `NoCredentials`)
 - Placeholder `backend.hcl` / `terraform.tfvars` — present for all environments
 - `infra/terraform/bootstrap/terraform.tfvars` — present (pilot bucket name)
 

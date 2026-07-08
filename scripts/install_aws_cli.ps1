@@ -11,6 +11,19 @@ if (Get-Command aws -ErrorAction SilentlyContinue) {
     exit 0
 }
 
+$DefaultAwsExe = Join-Path ${env:ProgramFiles} "Amazon\AWSCLIV2\aws.exe"
+if (Test-Path $DefaultAwsExe) {
+    $UserPath = [Environment]::GetEnvironmentVariable("Path", "User")
+    $DefaultDir = Split-Path $DefaultAwsExe -Parent
+    if ($UserPath -notlike "*$DefaultDir*") {
+        [Environment]::SetEnvironmentVariable("Path", "$UserPath;$DefaultDir", "User")
+        $env:Path = "$env:Path;$DefaultDir"
+    }
+    & $DefaultAwsExe --version
+    Write-Host "AWS CLI already installed. Open a new terminal or run: aws configure"
+    exit 0
+}
+
 $InstallRoot = Join-Path $env:LOCALAPPDATA "VYU\tools\aws-cli"
 $MsiPath = Join-Path $env:TEMP "AWSCLIV2.msi"
 $Url = "https://awscli.amazonaws.com/AWSCLIV2.msi"
